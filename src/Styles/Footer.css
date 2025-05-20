@@ -1,0 +1,129 @@
+.footer {
+    background-color: #1a3678;
+    color: white;
+    padding: 0.25rem 0 1rem;  /* Reduced padding to decrease height */
+}
+
+.footer-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 0.5rem;
+}
+
+.footer-section {
+    flex: 1;
+    min-width: 200px;
+    margin-bottom: 1.5rem;  /* Reduced margin-bottom */
+}
+
+.footer-title {
+    font-size: 1.8rem;
+    margin-bottom: 0.8rem;  /* Reduced margin-bottom */
+}
+
+.footer-description {
+    line-height: 1.6;
+    max-width: 300px;
+}
+
+.footer-heading {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;  /* Adjusted margin-bottom */
+}
+
+.footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-links li {
+    margin-bottom: 0.6rem;  /* Reduced margin-bottom */
+}
+
+.footer-links a {
+    color: white;
+    text-decoration: none;
+    transition: opacity 0.2s;
+}
+
+.footer-links a:hover {
+    opacity: 0.8;
+}
+
+.social-icons {
+    display: flex;
+    gap: 1.2rem; /* Added some space between the icons */
+    justify-content: center;  /* Center the icons horizontally */
+    align-items: center;  /* Vertically align the icons */
+    margin-bottom: 1.5rem;
+}
+
+
+.social-icons a {
+    color: white;
+    font-size: 1.5rem;
+    transition: opacity 0.2s;
+}
+
+.social-icons a:hover {
+    opacity: 0.8;
+}
+
+.newsletter-heading {
+    margin-top: 1rem;  /* Reduced margin-top */
+    margin-bottom: 0.5rem;
+}
+
+.newsletter-form {
+    display: flex;
+    max-width: 300px;
+}
+
+.newsletter-form input {
+    flex: 1;
+    padding: 0.8rem;
+    border: none;
+    border-radius: 4px 0 0 4px;
+}
+
+.newsletter-form button {
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    padding: 0 1rem;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.newsletter-form button:hover {
+    background-color: #2563eb;
+}
+
+.footer-bottom {
+    text-align: center;
+    padding-top: 1.5rem;  /* Reduced padding-top */
+    margin-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.9rem;
+}
+
+/* Responsive styles */
+@media screen and (max-width: 768px) {
+    .footer-container {
+        flex-direction: column;
+        padding: 0 1rem;  /* Adjusted padding for small screens */
+    }
+
+    .footer-section {
+        margin-bottom: 1.5rem;  /* Adjusted margin-bottom */
+    }
+
+    .social-icons {
+        justify-content: center;  /* Center social icons */
+    }
+}
