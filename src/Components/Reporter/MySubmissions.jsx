@@ -47,150 +47,152 @@ import {
   Tag,
 } from 'lucide-react';
 import { toast } from "sonner";
+import { newsService } from '../../services/news.service'; // Assuming newsService exists
+import { authService } from '../../services/auth.service'; // Assuming authService exists to get user info
 
 // Sample article data
-const sampleArticles = [
-  {
-    id: 1,
-    headline: "Climate Change Impact on Local Agriculture",
-    title: "Climate Change Impact on Local Agriculture",
-    category: "Environment",
-    status: "published",
-    submittedDate: "2023-05-10",
-    publishedDate: "2023-05-12",
-    summary: "An analysis of how climate change is affecting agricultural practices in local communities.",
-    content: "Detailed analysis of climate change effects on farming practices...",
-    tags: ["Climate", "Agriculture", "Local", "Environment"],
-    image: "https://example.com/images/climate-change.jpg",
-    imageCaption: "Local farmer examining drought-affected crops"
-  },
-  {
-    id: 2,
-    headline: "Startup Revolutionizing Online Education",
-    title: "Startup Revolutionizing Online Education",
-    category: "Technology",
-    status: "pending",
-    submittedDate: "2023-06-01",
-    publishedDate: null,
-    summary: "A new ed-tech startup introduces interactive AI-based learning for rural students.",
-    content: "The startup aims to improve accessibility and engagement in online education...",
-    tags: ["Education", "Technology", "AI", "Startup"],
-    image: "https://example.com/images/edtech.jpg",
-    imageCaption: "Students using tablets in a rural classroom"
-  },
-  {
-    id: 3,
-    headline: "Healthcare Access Improves in Remote Villages",
-    title: "Healthcare Access Improves in Remote Villages",
-    category: "Health",
-    status: "published",
-    submittedDate: "2023-07-15",
-    publishedDate: "2023-07-18",
-    summary: "Mobile clinics and telemedicine bring healthcare to underserved areas.",
-    content: "Remote healthcare programs are seeing promising results...",
-    tags: ["Healthcare", "Remote", "Telemedicine", "Villages"],
-    image: "https://example.com/images/mobile-health.jpg",
-    imageCaption: "Mobile health unit parked near a village center"
-  },
-  {
-    id: 4,
-    headline: "Local Artist Gains Global Recognition",
-    title: "Local Artist Gains Global Recognition",
-    category: "Culture",
-    status: "published",
-    submittedDate: "2023-08-05",
-    publishedDate: "2023-08-07",
-    summary: "A painter from a small town gets featured in a global art exhibition.",
-    content: "His artwork reflects traditional themes through a modern lens...",
-    tags: ["Art", "Culture", "Exhibition", "Recognition"],
-    image: "https://example.com/images/artist.jpg",
-    imageCaption: "The artist standing next to his featured painting"
-  },
-  {
-    id: 5,
-    headline: "Major Breakthrough in Renewable Energy Storage",
-    title: "Major Breakthrough in Renewable Energy Storage",
-    category: "Science",
-    status: "published",
-    submittedDate: "2023-09-12",
-    publishedDate: "2023-09-14",
-    summary: "Scientists develop a low-cost battery that could transform energy grids.",
-    content: "The new technology offers long-duration energy storage at reduced costs...",
-    tags: ["Energy", "Renewables", "Battery", "Innovation"],
-    image: "https://example.com/images/battery-tech.jpg",
-    imageCaption: "Prototype battery storage units in a lab"
-  },
-  {
-    id: 6,
-    headline: "Water Scarcity Looms in Urban Centers",
-    title: "Water Scarcity Looms in Urban Centers",
-    category: "Environment",
-    status: "pending",
-    submittedDate: "2023-10-02",
-    publishedDate: null,
-    summary: "Urban water demand exceeds supply amid climate stress and infrastructure delays.",
-    content: "Cities are grappling with outdated water systems and rising demand...",
-    tags: ["Water", "Urban", "Environment", "Crisis"],
-    image: "https://example.com/images/water-scarcity.jpg",
-    imageCaption: "People lining up at a public water tap"
-  },
-  {
-    id: 7,
-    headline: "Women-Led Businesses Drive Local Economy",
-    title: "Women-Led Businesses Drive Local Economy",
-    category: "Business",
-    status: "pending",
-    submittedDate: "2023-11-10",
-    publishedDate: null,
-    summary: "Entrepreneurship among women is fueling growth in regional markets.",
-    content: "Access to microloans and mentorship has helped many women succeed...",
-    tags: ["Women", "Entrepreneurship", "Business", "Local"],
-    image: "https://example.com/images/women-business.jpg",
-    imageCaption: "A women-led shop bustling with customers"
-  },
-  {
-    id: 8,
-    headline: "Floods Displace Thousands in Coastal Areas",
-    title: "Floods Displace Thousands in Coastal Areas",
-    category: "Disaster",
-    status: "rejected",
-    submittedDate: "2023-12-01",
-    publishedDate: null,
-    summary: "Torrential rains cause severe flooding in low-lying coastal districts.",
-    content: "Emergency services are working around the clock to evacuate residents...",
-    tags: ["Flood", "Disaster", "Coastal", "Evacuation"],
-    image: "https://example.com/images/flood.jpg",
-    imageCaption: "A rescue boat navigating through flooded streets"
-  },
-  {
-    id: 9,
-    headline: "Electric Vehicles Adoption Surges in Metro Cities",
-    title: "Electric Vehicles Adoption Surges in Metro Cities",
-    category: "Technology",
-    status: "rejected",
-    submittedDate: "2024-01-15",
-    publishedDate: null,
-    summary: "EV sales hit a new high as cities push for clean mobility.",
-    content: "Incentives and infrastructure are fueling the shift toward electric vehicles...",
-    tags: ["EV", "Mobility", "Technology", "Sustainability"],
-    image: "https://example.com/images/electric-vehicle.jpg",
-    imageCaption: "Charging station crowded with EVs"
-  },
-  {
-    id: 10,
-    headline: "Revival of Indigenous Languages Through Education",
-    title: "Revival of Indigenous Languages Through Education",
-    category: "Education",
-    status: "draft",
-    submittedDate: "2024-02-22",
-    publishedDate: null,
-    summary: "Schools integrate indigenous languages into the curriculum to preserve heritage.",
-    content: "This initiative is seen as a way to maintain linguistic and cultural diversity...",
-    tags: ["Language", "Education", "Culture", "Indigenous"],
-    image: "https://example.com/images/language-class.jpg",
-    imageCaption: "Children learning traditional script in a classroom"
-  }
-];
+// const sampleArticles = [
+//   {
+//     id: 1,
+//     headline: "Climate Change Impact on Local Agriculture",
+//     title: "Climate Change Impact on Local Agriculture",
+//     category: "Environment",
+//     status: "published",
+//     submittedDate: "2023-05-10",
+//     publishedDate: "2023-05-12",
+//     summary: "An analysis of how climate change is affecting agricultural practices in local communities.",
+//     content: "Detailed analysis of climate change effects on farming practices...",
+//     tags: ["Climate", "Agriculture", "Local", "Environment"],
+//     image: "https://example.com/images/climate-change.jpg",
+//     imageCaption: "Local farmer examining drought-affected crops"
+//   },
+//   {
+//     id: 2,
+//     headline: "Startup Revolutionizing Online Education",
+//     title: "Startup Revolutionizing Online Education",
+//     category: "Technology",
+//     status: "pending",
+//     submittedDate: "2023-06-01",
+//     publishedDate: null,
+//     summary: "A new ed-tech startup introduces interactive AI-based learning for rural students.",
+//     content: "The startup aims to improve accessibility and engagement in online education...",
+//     tags: ["Education", "Technology", "AI", "Startup"],
+//     image: "https://example.com/images/edtech.jpg",
+//     imageCaption: "Students using tablets in a rural classroom"
+//   },
+//   {
+//     id: 3,
+//     headline: "Healthcare Access Improves in Remote Villages",
+//     title: "Healthcare Access Improves in Remote Villages",
+//     category: "Health",
+//     status: "published",
+//     submittedDate: "2023-07-15",
+//     publishedDate: "2023-07-18",
+//     summary: "Mobile clinics and telemedicine bring healthcare to underserved areas.",
+//     content: "Remote healthcare programs are seeing promising results...",
+//     tags: ["Healthcare", "Remote", "Telemedicine", "Villages"],
+//     image: "https://example.com/images/mobile-health.jpg",
+//     imageCaption: "Mobile health unit parked near a village center"
+//   },
+//   {
+//     id: 4,
+//     headline: "Local Artist Gains Global Recognition",
+//     title: "Local Artist Gains Global Recognition",
+//     category: "Culture",
+//     status: "published",
+//     submittedDate: "2023-08-05",
+//     publishedDate: "2023-08-07",
+//     summary: "A painter from a small town gets featured in a global art exhibition.",
+//     content: "His artwork reflects traditional themes through a modern lens...",
+//     tags: ["Art", "Culture", "Exhibition", "Recognition"],
+//     image: "https://example.com/images/artist.jpg",
+//     imageCaption: "The artist standing next to his featured painting"
+//   },
+//   {
+//     id: 5,
+//     headline: "Major Breakthrough in Renewable Energy Storage",
+//     title: "Major Breakthrough in Renewable Energy Storage",
+//     category: "Science",
+//     status: "published",
+//     submittedDate: "2023-09-12",
+//     publishedDate: "2023-09-14",
+//     summary: "Scientists develop a low-cost battery that could transform energy grids.",
+//     content: "The new technology offers long-duration energy storage at reduced costs...",
+//     tags: ["Energy", "Renewables", "Battery", "Innovation"],
+//     image: "https://example.com/images/battery-tech.jpg",
+//     imageCaption: "Prototype battery storage units in a lab"
+//   },
+//   {
+//     id: 6,
+//     headline: "Water Scarcity Looms in Urban Centers",
+//     title: "Water Scarcity Looms in Urban Centers",
+//     category: "Environment",
+//     status: "pending",
+//     submittedDate: "2023-10-02",
+//     publishedDate: null,
+//     summary: "Urban water demand exceeds supply amid climate stress and infrastructure delays.",
+//     content: "Cities are grappling with outdated water systems and rising demand...",
+//     tags: ["Water", "Urban", "Environment", "Crisis"],
+//     image: "https://example.com/images/water-scarcity.jpg",
+//     imageCaption: "People lining up at a public water tap"
+//   },
+//   {
+//     id: 7,
+//     headline: "Women-Led Businesses Drive Local Economy",
+//     title: "Women-Led Businesses Drive Local Economy",
+//     category: "Business",
+//     status: "pending",
+//     submittedDate: "2023-11-10",
+//     publishedDate: null,
+//     summary: "Entrepreneurship among women is fueling growth in regional markets.",
+//     content: "Access to microloans and mentorship has helped many women succeed...",
+//     tags: ["Women", "Entrepreneurship", "Business", "Local"],
+//     image: "https://example.com/images/women-business.jpg",
+//     imageCaption: "A women-led shop bustling with customers"
+//   },
+//   {
+//     id: 8,
+//     headline: "Floods Displace Thousands in Coastal Areas",
+//     title: "Floods Displace Thousands in Coastal Areas",
+//     category: "Disaster",
+//     status: "rejected",
+//     submittedDate: "2023-12-01",
+//     publishedDate: null,
+//     summary: "Torrential rains cause severe flooding in low-lying coastal districts.",
+//     content: "Emergency services are working around the clock to evacuate residents...",
+//     tags: ["Flood", "Disaster", "Coastal", "Evacuation"],
+//     image: "https://example.com/images/flood.jpg",
+//     imageCaption: "A rescue boat navigating through flooded streets"
+//   },
+//   {
+//     id: 9,
+//     headline: "Electric Vehicles Adoption Surges in Metro Cities",
+//     title: "Electric Vehicles Adoption Surges in Metro Cities",
+//     category: "Technology",
+//     status: "rejected",
+//     submittedDate: "2024-01-15",
+//     publishedDate: null,
+//     summary: "EV sales hit a new high as cities push for clean mobility.",
+//     content: "Incentives and infrastructure are fueling the shift toward electric vehicles...",
+//     tags: ["EV", "Mobility", "Technology", "Sustainability"],
+//     image: "https://example.com/images/electric-vehicle.jpg",
+//     imageCaption: "Charging station crowded with EVs"
+//   },
+//   {
+//     id: 10,
+//     headline: "Revival of Indigenous Languages Through Education",
+//     title: "Revival of Indigenous Languages Through Education",
+//     category: "Education",
+//     status: "draft",
+//     submittedDate: "2024-02-22",
+//     publishedDate: null,
+//     summary: "Schools integrate indigenous languages into the curriculum to preserve heritage.",
+//     content: "This initiative is seen as a way to maintain linguistic and cultural diversity...",
+//     tags: ["Language", "Education", "Culture", "Indigenous"],
+//     image: "https://example.com/images/language-class.jpg",
+//     imageCaption: "Children learning traditional script in a classroom"
+//   }
+// ];
 
 
 const MySubmissions = () => {
@@ -202,10 +204,9 @@ const MySubmissions = () => {
   const [tabValue, setTabValue] = useState(0);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedArticle, setSelectedArticle] = useState(null);
-   const [articles, setArticles] = useState(() => {
-    const savedArticles = JSON.parse(localStorage.getItem('mySubmissions') || '[]');
-    return savedArticles.length > 0 ? savedArticles : sampleArticles; // Fallback to sample data if empty
-  });
+  const [articles, setArticles] = useState([]); // Initialize with empty array
+  const [loading, setLoading] = useState(true); // Add loading state
+  const [error, setError] = useState(null); // Add error state
   const [openViewDialog, setOpenViewDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false);
@@ -220,13 +221,62 @@ const [editFormData, setEditFormData] = useState({
 });
 
 useEffect(() => {
-    const handleStorageChange = () => {
-      const savedArticles = JSON.parse(localStorage.getItem('mySubmissions') || '[]');
-      setArticles(savedArticles.length > 0 ? savedArticles : sampleArticles);
+    const fetchReporterNews = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        // Get user profile to get reporter ID
+        const userProfileResponse = await authService.getProfile();
+
+        if (!userProfileResponse.success || !userProfileResponse.data || !userProfileResponse.data._id) {
+          setError('User not logged in or user ID not found.');
+          setLoading(false);
+          toast.error('User not logged in or user ID not found.');
+          return;
+        }
+
+        const reporterId = userProfileResponse.data._id;
+        console.log("Fetching news for reporter:", reporterId);
+
+        // Use the getNewsByReporter endpoint
+        const newsResponse = await newsService.getNewsByReporter(reporterId);
+        console.log("News response:", newsResponse);
+        
+        if (newsResponse.success) {
+          // Transform the news data to match our frontend structure
+          const transformedNews = newsResponse.data.map(item => ({
+            _id: item._id,
+            title: item.title,
+            headline: item.title,
+            content: item.content,
+            summary: item.summary || '',
+            category: item.category,
+            status: item.status,
+            createdAt: item.createdAt,
+            publishedDate: item.publishedAt,
+            tags: item.tags || [],
+            imageURLs: item.imageURLs || [],
+            location: item.location || '',
+            language: item.language || 'en',
+            isFake: item.isFake || false,
+            feedback: item.feedback || ''
+          }));
+          
+          setArticles(transformedNews);
+        } else {
+          setError(newsResponse.message || 'Failed to fetch articles.');
+          toast.error(newsResponse.message || 'Failed to fetch articles.');
+        }
+      } catch (err) {
+        console.error('Error fetching reporter news:', err);
+        setError('An error occurred while fetching articles.');
+        toast.error('An error occurred while fetching articles.');
+      } finally {
+        setLoading(false);
+      }
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    fetchReporterNews();
   }, []);
   
   const handleTabChange = (event, newValue) => {
@@ -256,7 +306,7 @@ useEffect(() => {
     headline: selectedArticle.headline,
     summary: selectedArticle.summary,
     content: selectedArticle.content,
-    category: selectedArticle.category,
+    category: selectedArticle.category?.name || '',
     tags: selectedArticle.tags || [],
     image: selectedArticle.image,
     imageCaption: selectedArticle.imageCaption
@@ -419,9 +469,9 @@ const getStatusIcon = (status) => {
         <TableBody>
           {filteredArticles.length > 0 ? (
             filteredArticles.map((article) => (
-              <TableRow key={article.id}>
+              <TableRow key={article._id}>
                 <TableCell>{article.title}</TableCell>
-                <TableCell>{article.category}</TableCell>
+                <TableCell>{article.category?.name || 'N/A'}</TableCell>
                 <TableCell>
                   <Chip
                     icon={getStatusIcon(article.status)}
@@ -430,10 +480,10 @@ const getStatusIcon = (status) => {
                     size="small"
                   />
                 </TableCell>
-                <TableCell>{new Date(article.submittedDate).toLocaleDateString()}</TableCell>
+                <TableCell>{article.createdAt ? new Date(article.createdAt).toLocaleDateString() !== 'Invalid Date' ? new Date(article.createdAt).toLocaleDateString() : 'N/A' : 'N/A'}</TableCell>
                 <TableCell>
                   {article.publishedDate 
-                    ? new Date(article.publishedDate).toLocaleDateString() 
+                    ? (new Date(article.publishedDate).toLocaleDateString() !== 'Invalid Date' ? new Date(article.publishedDate).toLocaleDateString() : 'N/A') 
                     : "-"}
                 </TableCell>
                 <TableCell align="right">
@@ -491,24 +541,22 @@ const getStatusIcon = (status) => {
                   size="small"
                   sx={{ mr: 1 }}
                 />
-                <Typography variant="body2" color="textSecondary">
-                  {article.category}
-                </Typography>
+                <Chip label={article.category?.name || 'N/A'} size="small" />
               </Box>
 
               <Typography variant="body2" sx={{ mt: 1, mb: 1, color: 'text.secondary' }}>
-                {article.summary.substring(0, 100)}...
+                {article.summary?.substring(0, 100) || 'No summary available'}...
               </Typography>
 
               <Divider sx={{ my: 1 }} />
 
               <Box sx={{ display: 'flex', justifyContent: 'space-between', pt: 1 }}>
                 <Typography variant="caption" color="textSecondary">
-                  Submitted: {new Date(article.submittedDate).toLocaleDateString()}
+                  Submitted: {article.createdAt ? new Date(article.createdAt).toLocaleDateString() !== 'Invalid Date' ? new Date(article.createdAt).toLocaleDateString() : 'N/A' : 'N/A'}
                 </Typography>
                 {article.publishedDate && (
                   <Typography variant="caption" color="textSecondary">
-                    Published: {new Date(article.publishedDate).toLocaleDateString()}
+                    Published: {new Date(article.publishedDate).toLocaleDateString() !== 'Invalid Date' ? new Date(article.publishedDate).toLocaleDateString() : 'N/A'}
                   </Typography>
                 )}
               </Box>
@@ -628,7 +676,7 @@ const getStatusIcon = (status) => {
               color={getStatusColor(selectedArticle.status)}
               size="small"
             />
-            <Chip label={selectedArticle.category} size="small" />
+            <Chip label={selectedArticle.category?.name || 'N/A'} size="small" />
           </Box>
         </Grid>
 
@@ -638,7 +686,7 @@ const getStatusIcon = (status) => {
             {selectedArticle.headline}
           </Typography>
           <Typography variant="caption" display="block" sx={{ color: 'text.secondary' }}>
-            Submitted on {new Date(selectedArticle.submittedDate).toLocaleDateString()}
+            Submitted on {new Date(selectedArticle.createdAt).toLocaleDateString()}
             {selectedArticle.publishedDate && 
               ` • Published on ${new Date(selectedArticle.publishedDate).toLocaleDateString()}`
             }

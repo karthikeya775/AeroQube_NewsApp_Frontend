@@ -40,12 +40,17 @@ const AdminSidebar = ({
       roles: ["admin"]
     },
     {
+      id: "categories",
+      label: "Category Management",
+      icon: <FolderTree size={20} />,
+      roles: ["admin"]
+    },
+    {
       id: "users",
       label: "User Management",
       icon: <Users size={20} />,
       roles: ["admin"]
     },
-    
     {
       id: "settings",
       label: "System Settings",
@@ -55,8 +60,13 @@ const AdminSidebar = ({
   ];
   
   const handleNavClick = (sectionId) => {
+    console.log('Sidebar: Clicked section:', sectionId);
+    console.log('Sidebar: Current section before update:', currentSection);
     setCurrentSection(sectionId);
-    closeMobileDrawer();
+    console.log('Sidebar: Section updated to:', sectionId);
+    if (closeMobileDrawer) {
+      closeMobileDrawer();
+    }
   };
   
   // Filter items by role

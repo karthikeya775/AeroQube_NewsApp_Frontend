@@ -21,14 +21,48 @@ import { useNavigate } from 'react-router-dom';
 import ReporterReg from './Pages/Admin/ReporterReg';
 import ReporterApplicationLogin from './Pages/Reporter/ReporterApplicationLogin';
 import ReporterRegistration from './Pages/Reporter/ReporterRegistration';
+import EmailVerification from './Components/Auth/EmailVerification';
+import EditorPortal from './Components/Editor/EditorPortal';
+import AllNews from './Pages/User/AllNews.jsx';
+import CategoryNews from './Pages/User/CategoryNews.jsx'
 
-// ProtectedRoute component (your version)
+// ProtectedRoute component
 const ProtectedRoute = ({ children, allowedRole }) => {
-  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-  const userRole = localStorage.getItem('userRole');
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const userRole = user.role?.toLowerCase();
 
-  if (!isAuthenticated || userRole !== allowedRole) {
-    return <Navigate to={`/rolebasedlogin?role=${allowedRole}`} replace />; // Fixed role variable
+  // Handle reporter application routes
+  if (allowedRole === 'user' && ['/reporter-application/dashboard', '/reporter-application/apply'].includes(window.location.pathname)) {
+    if (!token) {
+      return <Navigate to="/reporter-application" replace />;
+    }
+    
+    // Check user roles
+    switch (userRole) {
+      case 'reporter':
+        return <Navigate to="/reporter/dashboard" replace />;
+      case 'pending-reporter':
+      case 'user':
+        return children;
+      default:
+        return <Navigate to="/reporter-application" replace />;
+    }
+  }
+
+  // Regular role checking for other routes
+  if (!token) {
+    return <Navigate to={`/rolebasedlogin?role=${allowedRole}`} replace />;
+  }
+
+  // Allow pending-reporter to access user routes
+  if (allowedRole === 'user' && (userRole === 'user' || userRole === 'pending-reporter')) {
+    return children;
+  }
+
+  // Strict role checking for other routes
+  if (userRole !== allowedRole) {
+    return <Navigate to={`/rolebasedlogin?role=${allowedRole}`} replace />;
   }
 
   return children;
@@ -121,8 +155,9 @@ function App() {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Home />} />
-        <Route path="/rolebasedlogin" element={<RoleBasedLogin />} /> {/* Changed from individual role routes */}
-         <Route path="/register" element={<UserRegistration />} />
+        <Route path="/rolebasedlogin" element={<RoleBasedLogin />} />
+        <Route path="/register" element={<UserRegistration />} />
+        <Route path="/verify-email" element={<EmailVerification />} />
 
         {/* Protected Admin Route */}
         <Route
@@ -130,6 +165,16 @@ function App() {
           element={
             <ProtectedRoute allowedRole="admin">
               <AdminPanel />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Protected Editor Route */}
+        <Route
+          path="/editor/*"
+          element={
+            <ProtectedRoute allowedRole="editor">
+              <EditorPortal />
             </ProtectedRoute>
           }
         />
@@ -197,8 +242,31 @@ function App() {
           path="/user/profile"
           element={
             <ProtectedRoute allowedRole="user">
-              <UserLayout>
-                <UserProfile />
+              <UserProfile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/user/category/:categoryId"
+          element={
+            <ProtectedRoute allowedRole="user">
+              <CategoryNews />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/user/all-news"
+          element={
+            <ProtectedRoute allowedRole="user">
+              <UserLayout
+                currentNews={currentNews}
+                isPlaying={isPlaying}
+                handleStopAudio={handleStopAudio}
+                handleTogglePlay={handleTogglePlay}
+              >
+                <AllNews onPlayAudio={handlePlayAudio} currentPlayingNews={currentNews} />
               </UserLayout>
             </ProtectedRoute>
           }
@@ -211,7 +279,7 @@ function App() {
           <Route
             path="dashboard"
             element={
-              <ProtectedRoute allowedRole="applicant">
+              <ProtectedRoute allowedRole="user">
                 <ReporterApplicationDashboard />
               </ProtectedRoute>
             }
@@ -219,7 +287,7 @@ function App() {
           <Route
             path="apply"
             element={
-              <ProtectedRoute allowedRole="applicant">
+              <ProtectedRoute allowedRole="user">
                 <ReporterReg />
               </ProtectedRoute>
             }

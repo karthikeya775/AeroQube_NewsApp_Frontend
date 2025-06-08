@@ -15,38 +15,7 @@ import {
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useNavigate, useSearchParams  } from 'react-router-dom';
 import { toast } from 'sonner';
-
-const setupDefaultUsers = () => {
-  const users = JSON.parse(localStorage.getItem('users') || '[]');
-  
-  // Check if default users already exist
-  const adminExists = users.some(u => u.role === 'admin');
-  const reporterExists = users.some(u => u.role === 'reporter');
-
-  if (!adminExists) {
-    users.push({
-      id: 'admin-1',
-      name: 'Admin User',
-      email: 'admin@newsapp.com',
-      password: 'admin123', // In a real app, use hashed passwords
-      role: 'admin',
-      createdAt: new Date().toISOString()
-    });
-  }
-
-  if (!reporterExists) {
-    users.push({
-      id: 'reporter-1',
-      name: 'Reporter User',
-      email: 'reporter@newsapp.com',
-      password: 'reporter123', // In a real app, use hashed passwords
-      role: 'reporter',
-      createdAt: new Date().toISOString()
-    });
-  }
-
-  localStorage.setItem('users', JSON.stringify(users));
-};
+import { authService } from '../services/auth.service';
 
 const RoleBasedLogin = () => {
   const navigate = useNavigate();
@@ -60,11 +29,6 @@ const RoleBasedLogin = () => {
     password: ''
   });
 
-  // Call setupDefaultUsers when component mounts
-  React.useEffect(() => {
-    setupDefaultUsers();
-  }, []);
-
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -74,40 +38,60 @@ const RoleBasedLogin = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    try {
+      console.log('Form Data:', formData);
+      const response = await authService.login(formData);
+      console.log('Login Response:', response);
 
-    const users = JSON.parse(localStorage.getItem('users') || '[]');
-    
-    // Update the find condition to check both email and password
-    const user = users.find(u => 
-      u.email === formData.email && 
-      u.password === formData.password && // In a real app, use password hashing
-      u.role === role
-    );
+      // Check if response has the expected structure
+      if (!response || !response.data) {
+        toast.error('Invalid response from server');
+        return;
+      }
 
-    if (user) {
+      const { token, user } = response.data;
+
       // Store authentication data
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
       localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('userRole', role);
-      localStorage.setItem('currentUser', JSON.stringify(user));
+      localStorage.setItem('userRole', user.role);
+
+      if (user.role !== role) {
+        toast.error(`Invalid role. You are not authorized as ${role}`);
+        return;
+      }
+
+      if (!user.isVerified) {
+        toast.error('Please verify your email first');
+        return;
+      }
 
       toast.success('Login successful!');
-      
+
       // Navigate based on role
-      switch (role) {
+      switch (user.role) {
         case 'user':
-          navigate('/user/dashboard');
-          break;
-        case 'admin':
-          navigate('/admin/dashboard');
+          navigate('/user/dashboard', { replace: true });
           break;
         case 'reporter':
-          navigate('/reporter/dashboard');
+          navigate('/reporter/dashboard', { replace: true });
+          break;
+        case 'editor':
+          navigate('/editor/dashboard', { replace: true });
+          break;
+        case 'admin':
+          navigate('/admin/dashboard', { replace: true });
           break;
         default:
-          navigate('/');
+          navigate('/', { replace: true });
       }
-    } else {
-      toast.error('Invalid credentials or user role!');
+    } catch (error) {
+      console.error('Login error:', error);
+      toast.error(
+        error.response?.data?.message || 
+        'Login failed. Please check your credentials.'
+      );
     }
   };
 

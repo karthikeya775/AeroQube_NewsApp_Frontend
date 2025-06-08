@@ -8,10 +8,14 @@ import {
   Typography,
   Container,
   Link,
-  Divider
+  Divider,
+  InputAdornment,
+  IconButton
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { Eye, EyeOff } from 'lucide-react';
+import { authService } from '../../services/auth.service';
 
 const ReporterApplicationLogin = () => {
   const navigate = useNavigate();
@@ -19,6 +23,8 @@ const ReporterApplicationLogin = () => {
     email: '',
     password: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -27,22 +33,56 @@ const ReporterApplicationLogin = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Get applicants from localStorage
-    const applicants = JSON.parse(localStorage.getItem('reporterApplicants') || '[]');
-    const applicant = applicants.find(a => a.email === formData.email);
+    setLoading(true);
 
-    if (applicant && applicant.password === formData.password) {
-      localStorage.setItem('isAuthenticated', 'true');
-      localStorage.setItem('userRole', 'applicant');
-      localStorage.setItem('currentUser', JSON.stringify(applicant));
-      
-      toast.success('Login successful!');
-      navigate('/reporter-application/dashboard');
-    } else {
-      toast.error('Invalid credentials');
+    try {
+      const response = await authService.login({
+        email: formData.email,
+        password: formData.password
+      });
+
+      console.log('Login response:', response);
+
+      if (response.success) {
+        // Store token and user data
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+
+        const userRole = response.data.user.role?.toLowerCase();
+        console.log('User role:', userRole);
+
+        // Handle different roles
+        switch (userRole) {
+          case 'reporter':
+            toast.error('You are already a reporter');
+            navigate('/reporter/dashboard');
+            break;
+          
+          case 'admin':
+          case 'superadmin':
+            toast.success('Welcome Admin!');
+            navigate('/admin/dashboard');
+            break;
+
+          case 'pending-reporter':
+            toast.info('Your reporter application is pending review');
+            navigate('/reporter-application/dashboard');
+            break;
+
+          default:
+            // Normal user - can apply to become reporter
+            toast.success('Login successful!');
+            navigate('/reporter-application/dashboard');
+            break;
+        }
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast.error(error.message || 'Invalid credentials');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -61,7 +101,7 @@ const ReporterApplicationLogin = () => {
               Reporter Application Portal
             </Typography>
             <Typography color="text.secondary" align="center" paragraph>
-              Sign in to check your application status or submit a new application
+              Sign in to submit your application to become a reporter
             </Typography>
             
             <form onSubmit={handleSubmit}>
@@ -74,16 +114,30 @@ const ReporterApplicationLogin = () => {
                 required
                 value={formData.email}
                 onChange={handleChange}
+                disabled={loading}
               />
               <TextField
                 fullWidth
                 label="Password"
                 name="password"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 margin="normal"
                 required
                 value={formData.password}
                 onChange={handleChange}
+                disabled={loading}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setShowPassword(!showPassword)}
+                        edge="end"
+                      >
+                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
               />
               <Button
                 fullWidth
@@ -91,8 +145,9 @@ const ReporterApplicationLogin = () => {
                 variant="contained"
                 size="large"
                 sx={{ mt: 3 }}
+                disabled={loading}
               >
-                Sign In
+                {loading ? 'Signing in...' : 'Sign In'}
               </Button>
             </form>
 
@@ -106,6 +161,7 @@ const ReporterApplicationLogin = () => {
                 variant="outlined"
                 onClick={() => navigate('/reporter-application/register')}
                 fullWidth
+                disabled={loading}
               >
                 Create Account
               </Button>

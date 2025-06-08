@@ -14,6 +14,7 @@ import {
 import { Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { authService } from '../../services/auth.service';
 
 const ReporterRegistration = () => {
   const navigate = useNavigate();
@@ -25,44 +26,89 @@ const ReporterRegistration = () => {
     confirmPassword: '',
     phone: ''
   });
+  const [errors, setErrors] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
+    password: ''
+  });
 
-  const handleSubmit = (e) => {
+  const validateForm = () => {
+    let isValid = true;
+    const newErrors = { ...errors };
+
+    // Name validation - only letters, spaces, and hyphens
+    const nameRegex = /^[A-Za-z\s-]+$/;
+    if (!nameRegex.test(formData.fullName)) {
+      newErrors.fullName = 'Name must contain only letters, spaces, or hyphens';
+      isValid = false;
+    } else {
+      newErrors.fullName = '';
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+      isValid = false;
+    } else {
+      newErrors.email = '';
+    }
+
+    // Phone validation
+    const phoneRegex = /^\d{10}$/;
+    if (!phoneRegex.test(formData.phone)) {
+      newErrors.phone = 'Please enter a valid 10-digit phone number';
+      isValid = false;
+    } else {
+      newErrors.phone = '';
+    }
+
+    // Password validation
+    if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters long';
+      isValid = false;
+    } else {
+      newErrors.password = '';
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // First validate passwords match
     if (formData.password !== formData.confirmPassword) {
       toast.error("Passwords don't match!");
       return;
     }
 
-    try {
-      const applicants = JSON.parse(localStorage.getItem('reporterApplicants') || '[]');
-      
-      // Check if email already exists
-      if (applicants.some(a => a.email === formData.email)) {
-        toast.error('Email already registered!');
-        return;
-      }
+    // Then validate form fields
+    if (!validateForm()) {
+      toast.error('Please check the form for errors');
+      return;
+    }
 
-      // Create new applicant
-      const newApplicant = {
-        id: Date.now().toString(),
-        fullName: formData.fullName,
-        email: formData.email,
+    try {
+      const userData = {
+        name: formData.fullName.trim(), // Trim whitespace
+        email: formData.email.trim(),
         password: formData.password,
-        phone: formData.phone,
-        role: 'applicant',
-        createdAt: new Date().toISOString()
+        contact: formData.phone,
+        role: 'user'
       };
 
-      // Save to localStorage
-      applicants.push(newApplicant);
-      localStorage.setItem('reporterApplicants', JSON.stringify(applicants));
-
-      toast.success('Registration successful! Please login.');
-      navigate('/reporter-application');
+      const response = await authService.register(userData);
+      
+      if (response.success) {
+        toast.success('Registration successful! Please login to submit your reporter application.');
+        navigate('/reporter-application');
+      }
     } catch (error) {
       console.error('Registration error:', error);
-      toast.error('Registration failed. Please try again.');
+      toast.error(error.response?.data?.message || 'Registration failed. Please try again.');
     }
   };
 
@@ -94,6 +140,8 @@ const ReporterRegistration = () => {
                 required
                 value={formData.fullName}
                 onChange={handleChange}
+                error={!!errors.fullName}
+                helperText={errors.fullName}
               />
               <TextField
                 fullWidth
@@ -104,6 +152,8 @@ const ReporterRegistration = () => {
                 required
                 value={formData.email}
                 onChange={handleChange}
+                error={!!errors.email}
+                helperText={errors.email}
               />
               <TextField
                 fullWidth
@@ -113,6 +163,8 @@ const ReporterRegistration = () => {
                 required
                 value={formData.phone}
                 onChange={handleChange}
+                error={!!errors.phone}
+                helperText={errors.phone}
               />
               <TextField
                 fullWidth
@@ -123,6 +175,8 @@ const ReporterRegistration = () => {
                 required
                 value={formData.password}
                 onChange={handleChange}
+                error={!!errors.password}
+                helperText={errors.password}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">

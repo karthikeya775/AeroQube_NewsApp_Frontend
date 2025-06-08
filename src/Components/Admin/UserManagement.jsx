@@ -22,6 +22,7 @@ import {
   DialogContentText,
   DialogActions,
   Avatar,
+  CircularProgress,
 } from "@mui/material";
 import {
   Search,
@@ -34,116 +35,100 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import ReporterApplications from "../ReporterApplications";
-
-// Sample data for reporters
-const reporters = [
-  {
-    id: 1,
-    name: "John Doe",
-    email: "john@example.com",
-    status: "active",
-    articles: 23,
-    applicationDate: "2023-03-15",
-    avatar: "https://randomuser.me/api/portraits/men/1.jpg",
-  },
-  {
-    id: 2,
-    name: "Sarah Johnson",
-    email: "sarah@example.com",
-    status: "active",
-    articles: 45,
-    applicationDate: "2023-02-22",
-    avatar: "https://randomuser.me/api/portraits/women/2.jpg",
-  },
-  {
-    id: 3,
-    name: "Michael Brown",
-    email: "michael@example.com",
-    status: "inactive",
-    articles: 12,
-    applicationDate: "2023-04-10",
-    avatar: "https://randomuser.me/api/portraits/men/3.jpg",
-  },
-];
-
+import { applicationService } from '../../services/application.service';
+import { authService } from '../../services/auth.service';
 
 const UserManagement = ({ userRole }) => {
-
-  const [applications, setApplications] = useState([
-  { 
-      id: 1, 
-      name: 'John Smith', 
-      email: 'john.smith@example.com', 
-      phone: '+91 98765 43210',
-      date: '2023-05-10T08:30:00Z',
-      status: 'pending',
-      bio: 'Experienced journalist with over 5 years covering technology and business news for major publications.',
-      currentAffiliation: 'Freelance',
-      documents: ['id_document.pdf', 'press_credentials.pdf'],
-      avatarUrl: 'https://randomuser.me/api/portraits/men/41.jpg'
-    },
-    { 
-      id: 2, 
-      name: 'Priya Sharma', 
-      email: 'priya.s@example.com', 
-      phone: '+91 87654 32109',
-      date: '2023-05-09T14:20:00Z',
-      status: 'approved',
-      bio: 'Political correspondent with expertise in election coverage and policy analysis. Previously worked with Delhi Times.',
-      currentAffiliation: 'Delhi Chronicle',
-      documents: ['id_document.pdf', 'sample_work.pdf'],
-      avatarUrl: 'https://randomuser.me/api/portraits/women/65.jpg'
-    },
-    { 
-      id: 3, 
-      name: 'David Wilson', 
-      email: 'david.w@example.com', 
-      phone: '+91 76543 21098',
-      date: '2023-05-08T10:15:00Z',
-      status: 'rejected',
-      bio: 'Sports journalist specialized in cricket and football coverage with a focus on analytical reporting.',
-      currentAffiliation: 'Sports Weekly',
-      documents: ['id_document.pdf'],
-      avatarUrl: 'https://randomuser.me/api/portraits/men/22.jpg'
-    },
-    { 
-      id: 4, 
-      name: 'Ananya Patel', 
-      email: 'ananya.p@example.com', 
-      phone: '+91 65432 10987',
-      date: '2023-05-08T09:40:00Z',
-      status: 'pending',
-      bio: 'Environmental journalist covering climate change initiatives and sustainability practices across India.',
-      currentAffiliation: 'Green Earth Magazine',
-      documents: ['id_document.pdf', 'certificate.pdf', 'resume.pdf'],
-      avatarUrl: 'https://randomuser.me/api/portraits/women/32.jpg'
-    },
-    { 
-      id: 5, 
-      name: 'Raj Kumar', 
-      email: 'raj.k@example.com', 
-      phone: '+91 54321 09876',
-      date: '2023-05-07T16:50:00Z',
-      status: 'pending',
-      bio: 'Entertainment reporter covering Bollywood and regional cinema with extensive industry connections.',
-      currentAffiliation: 'Film First',
-      documents: ['id_document.pdf', 'press_pass.pdf'],
-      avatarUrl: 'https://randomuser.me/api/portraits/men/75.jpg'
-    }
-]);
-
- useEffect(() => {
-    localStorage.setItem('reporterApplications', JSON.stringify(applications));
-  }, [applications]);
-
-
-
+  // Move all state declarations to the top
   const [tabValue, setTabValue] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
+  const [applications, setApplications] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [reporters, setReporters] = useState([]);
+  const [reportersLoading, setReportersLoading] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState({ type: '', id: null });
+
+  // Add useEffect to fetch applications
+  useEffect(() => {
+    const fetchApplications = async () => {
+      try {
+        setLoading(true);
+        // Check for token before making request
+        const token = localStorage.getItem('token');
+        if (!token) {
+          toast.error('Please login to access this feature');
+          return;
+        }
+
+        const response = await applicationService.getAllApplications();
+        
+        if (response.success) {
+          const formattedApplications = response.data.map(app => ({
+            id: app._id,
+            name: app.reporterId.name,
+            email: app.reporterId.email,
+            phone: app.reporterId.contact || 'Not provided',
+            date: app.createdAt,
+            status: app.status,
+            bio: app.bio,
+            currentAffiliation: app.organization || 'Not provided',
+            documents: app.documents || [],
+            avatarUrl: app.reporterId.profileImage || `https://ui-avatars.com/api/?name=${app.reporterId.name}`,
+          }));
+          setApplications(formattedApplications);
+        }
+      } catch (error) {
+        console.error('Failed to fetch applications:', error);
+        if (error.statusCode === 401 || error.message.includes('Token')) {
+          toast.error('Session expired. Please login again');
+          // Optionally redirect to login page
+          // navigate('/login');
+        } else {
+          toast.error(error.message || 'Failed to load applications');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchApplications();
+  }, []);
+
+  // Add useEffect to fetch reporters
+  useEffect(() => {
+    const fetchReporters = async () => {
+      if (tabValue !== 1) return;
+      
+      try {
+        setReportersLoading(true);
+        const response = await authService.getReporters();
+        
+        if (response.success) {
+          const formattedReporters = response.data.map(reporter => ({
+            id: reporter._id,
+            name: reporter.name,
+            email: reporter.email,
+            status: reporter.isActive ? 'active' : 'inactive',
+            articles: reporter.articles?.length || 0,
+            applicationDate: reporter.createdAt,
+            avatar: reporter.profileImage || `https://ui-avatars.com/api/?name=${reporter.name}`,
+            bio: reporter.bio || ''
+          }));
+          setReporters(formattedReporters);
+        }
+      } catch (error) {
+        console.error('Failed to fetch reporters:', error);
+        toast.error(error.message || 'Failed to load reporters');
+      } finally {
+        setReportersLoading(false);
+      }
+    };
+
+    fetchReporters();
+  }, [tabValue]);
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
@@ -167,67 +152,69 @@ const UserManagement = ({ userRole }) => {
     setConfirmDialogOpen(true);
   };
 
-  const handleConfirmAction = () => {
+  const handleConfirmAction = async () => {
     const { type, id } = confirmAction;
-    
-    if (type === 'approve') {
-      toast({
-        title: "Application Approved",
-        description: "The reporter application has been approved",
-      });
-    } else if (type === 'reject') {
-      toast({
-        title: "Application Rejected",
-        description: "The reporter application has been rejected",
-      });
-    } else if (type === 'delete') {
-      toast({
-        title: "Reporter Removed",
-        description: "The reporter has been removed from the system",
-      });
-    } else if (type === 'deactivate') {
-      toast({
-        title: "Reporter Deactivated",
-        description: "The reporter account has been deactivated",
-      });
-    } else if (type === 'activate') {
-      toast({
-        title: "Reporter Activated",
-        description: "The reporter account has been activated",
-      });
+    try {
+      if (type === 'activate' || type === 'deactivate') {
+        const response = await authService.updateReporterStatus(
+          id, 
+          type === 'activate'
+        );
+        
+        if (response.success) {
+          setReporters(prev => prev.map(reporter => 
+            reporter.id === id 
+              ? { ...reporter, status: type === 'activate' ? 'active' : 'inactive' }
+              : reporter
+          ));
+          toast.success(`Reporter ${type}d successfully`);
+        }
+      } else if (type === 'delete') {
+        const response = await authService.deleteReporter(id);
+        if (response.success) {
+          setReporters(prev => prev.filter(reporter => reporter.id !== id));
+          toast.success('Reporter removed successfully');
+        }
+      }
+    } catch (error) {
+      toast.error(error.message || `Failed to ${type} reporter`);
+    } finally {
+      setConfirmDialogOpen(false);
     }
-    
-    setConfirmDialogOpen(false);
   };
 
-  const handleApproveApplication = (applicationId) => {
-    setApplications(prev => prev.map(app => 
-      app.id === applicationId 
-        ? { ...app, status: 'approved' } 
-        : app
-    ));
-    
-    // Update localStorage
-    const updatedApplications = applications.map(app => 
-      app.id === applicationId ? { ...app, status: 'approved' } : app
-    );
-    localStorage.setItem('reporterApplications', JSON.stringify(updatedApplications));
+  // Update the approve handler
+  const handleApproveApplication = async (applicationId) => {
+    try {
+      const response = await applicationService.updateApplicationStatus(applicationId, 'approved');
+      if (response.success) {
+        setApplications(prev => prev.map(app => 
+          app.id === applicationId 
+            ? { ...app, status: 'approved' } 
+            : app
+        ));
+        toast.success('Application approved successfully');
+      }
+    } catch (error) {
+      toast.error(error.message || 'Failed to approve application');
+    }
   };
 
-  const handleRejectApplication = (applicationId, reason) => {
-    setApplications(prev => prev.map(app => 
-      app.id === applicationId 
-        ? { ...app, status: 'rejected', rejectReason: reason } 
-        : app
-    ));
-    
-    // Update localStorage
-    const updatedApplications = applications.map(app => 
-      app.id === applicationId 
-        ? { ...app, status: 'rejected', rejectReason: reason } 
-        : app
-    );
-    localStorage.setItem('reporterApplications', JSON.stringify(updatedApplications));
+  // Update the reject handler
+  const handleRejectApplication = async (applicationId, reason) => {
+    try {
+      const response = await applicationService.updateApplicationStatus(applicationId, 'rejected', reason);
+      if (response.success) {
+        setApplications(prev => prev.map(app => 
+          app.id === applicationId 
+            ? { ...app, status: 'rejected', rejectReason: reason } 
+            : app
+        ));
+        toast.success('Application rejected successfully');
+      }
+    } catch (error) {
+      toast.error(error.message || 'Failed to reject application');
+    }
   };
 
   const filteredReporters = reporters.filter(reporter =>
@@ -290,9 +277,20 @@ const UserManagement = ({ userRole }) => {
         </Button>
       </Box>
       
-      {tabValue === 0 &&
-        <ReporterApplications applications={filteredApplications} userRole={userRole} onApprove={handleApproveApplication}  
-      onReject={handleRejectApplication} />}
+      {tabValue === 0 && (
+        loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <ReporterApplications 
+            applications={filteredApplications} 
+            userRole={userRole} 
+            onApprove={handleApproveApplication}  
+            onReject={handleRejectApplication} 
+          />
+        )
+      )}
       
       {tabValue === 1 && (
         <TableContainer component={Paper}>
@@ -308,89 +306,96 @@ const UserManagement = ({ userRole }) => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredReporters.map((reporter) => (
-                <TableRow key={reporter.id}>
-                  <TableCell>
-                    <Box sx={{ display: "flex", alignItems: "center" }}>
-                      <Avatar
-                        src={reporter.avatar}
-                        alt={reporter.name}
-                        sx={{ mr: 2 }}
-                      />
-                      {reporter.name}
-                    </Box>
-                  </TableCell>
-                  <TableCell>{reporter.email}</TableCell>
-                  <TableCell>{reporter.articles}</TableCell>
-                  <TableCell>
-                    <Chip
-                      label={reporter.status === "active" ? "Active" : "Inactive"}
-                      color={reporter.status === "active" ? "success" : "default"}
-                      size="small"
-                    />
-                  </TableCell>
-                  <TableCell>{new Date(reporter.applicationDate).toLocaleDateString()}</TableCell>
-                  <TableCell align="right">
-                    <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
-                      <IconButton
-                        size="small"
-                        color="primary"
-                        onClick={() => {
-                          toast({
-                            title: "Email Sent",
-                            description: `Email sent to ${reporter.name}`,
-                          });
-                        }}
-                      >
-                        <Mail size={18} />
-                      </IconButton>
-                      
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        startIcon={<Eye size={16} />}
-                        onClick={() => handleViewDetails(reporter)}
-                      >
-                        View
-                      </Button>
-                      
-                      {userRole === "admin" && (
-                        <>
-                          {reporter.status === "active" ? (
-                            <Button
-                              variant="outlined"
-                              color="warning"
-                              size="small"
-                              onClick={() => openConfirmDialog('deactivate', reporter.id)}
-                            >
-                              Deactivate
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="outlined"
-                              color="success"
-                              size="small"
-                              onClick={() => openConfirmDialog('activate', reporter.id)}
-                            >
-                              Activate
-                            </Button>
-                          )}
-                          <Button
-                            variant="outlined"
-                            color="error"
-                            size="small"
-                            startIcon={<Trash2 size={16} />}
-                            onClick={() => openConfirmDialog('delete', reporter.id)}
-                          >
-                            Remove
-                          </Button>
-                        </>
-                      )}
-                    </Box>
+              {reportersLoading ? (
+                <TableRow>
+                  <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+                    <CircularProgress size={24} />
                   </TableCell>
                 </TableRow>
-              ))}
-              {filteredReporters.length === 0 && (
+              ) : filteredReporters.length > 0 ? (
+                filteredReporters.map((reporter) => (
+                  <TableRow key={reporter.id}>
+                    <TableCell>
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <Avatar
+                          src={reporter.avatar}
+                          alt={reporter.name}
+                          sx={{ mr: 2 }}
+                        />
+                        {reporter.name}
+                      </Box>
+                    </TableCell>
+                    <TableCell>{reporter.email}</TableCell>
+                    <TableCell>{reporter.articles}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={reporter.status === "active" ? "Active" : "Inactive"}
+                        color={reporter.status === "active" ? "success" : "default"}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>{new Date(reporter.applicationDate).toLocaleDateString()}</TableCell>
+                    <TableCell align="right">
+                      <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
+                        <IconButton
+                          size="small"
+                          color="primary"
+                          onClick={() => {
+                            toast({
+                              title: "Email Sent",
+                              description: `Email sent to ${reporter.name}`,
+                            });
+                          }}
+                        >
+                          <Mail size={18} />
+                        </IconButton>
+                        
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          startIcon={<Eye size={16} />}
+                          onClick={() => handleViewDetails(reporter)}
+                        >
+                          View
+                        </Button>
+                        
+                        {userRole === "admin" && (
+                          <>
+                            {reporter.status === "active" ? (
+                              <Button
+                                variant="outlined"
+                                color="warning"
+                                size="small"
+                                onClick={() => openConfirmDialog('deactivate', reporter.id)}
+                              >
+                                Deactivate
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="outlined"
+                                color="success"
+                                size="small"
+                                onClick={() => openConfirmDialog('activate', reporter.id)}
+                              >
+                                Activate
+                              </Button>
+                            )}
+                            <Button
+                              variant="outlined"
+                              color="error"
+                              size="small"
+                              startIcon={<Trash2 size={16} />}
+                              onClick={() => openConfirmDialog('delete', reporter.id)}
+                            >
+                              Remove
+                            </Button>
+                          </>
+                        )}
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
                 <TableRow>
                   <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
                     <Typography variant="body1" color="textSecondary">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -20,6 +20,7 @@ import {
   Alert,
   useTheme,
   useMediaQuery,
+  CircularProgress
 } from '@mui/material';
 import {
   Image,
@@ -35,10 +36,36 @@ import {
   Link
 } from 'lucide-react';
 import { toast } from "sonner";
+import { newsService } from '../../services/news.service';
+import axios from 'axios';
+
+// Language options from the backend enum
+const LANGUAGES = {
+  "as": "Assamese",
+  "bn": "Bengali",
+  "bho": "Bhojpuri",
+  "gu": "Gujarati",
+  "hi": "Hindi",
+  "kn": "Kannada",
+  "kok": "Konkani",
+  "mai": "Maithili",
+  "ml": "Malayalam",
+  "mni-Mtei": "Manipuri",
+  "mr": "Marathi",
+  "or": "Odia",
+  "pa": "Punjabi",
+  "sa": "Sanskrit",
+  "sd": "Sindhi",
+  "ta": "Tamil",
+  "te": "Telugu",
+  "ur": "Urdu",
+  "en": "English"
+};
 
 const ArticleSubmissionForm = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [formData, setFormData] = useState({
   title: '',
@@ -51,10 +78,14 @@ const ArticleSubmissionForm = () => {
   currentTag: '',
   coverImage: null,
   additionalImages: [],
+  language: 'en' // Default language
 });
   
   const [errors, setErrors] = useState({});
   const [isDraft, setIsDraft] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categoriesError, setCategoriesError] = useState('');
   
   // Sample categories for the dropdown
  const categorySubcategories = {
@@ -140,7 +171,7 @@ const ArticleSubmissionForm = () => {
   
   if (!formData.content.trim()) {
     newErrors.content = 'Content is required';
-  } else if (formData.content.split(' ').length < 0) {
+  } else if (formData.content.split(' ').length < 800) {
     newErrors.content = 'Content must be at least 800 words';
   } else if (formData.content.split(' ').length > 1500) {
     newErrors.content = 'Content must not exceed 1500 words';
@@ -160,57 +191,80 @@ const ArticleSubmissionForm = () => {
 };
   
  // Update these functions
-const handleSubmit = (e, submitType) => {
+const handleSubmit = async (e, submitType) => {
   e.preventDefault();
   
   if (validateForm()) {
-    // Create new article data
-    const articleData = {
-      id: Math.random().toString(36).substr(2, 9),
-      title: formData.title,
-      headline: formData.title,
-      category: formData.category,
-      status: submitType === 'draft' ? 'draft' : 'pending', // Set status based on submitType
-      submittedDate: new Date().toISOString().split('T')[0],
-      publishedDate: null,
-      summary: formData.summary || '',
-      content: formData.content,
-      tags: formData.tags,
-      image: formData.coverImage ? URL.createObjectURL(formData.coverImage) : null,
-      views: 0,
-      author: 'Current User'
-    };
+    try {
+      setIsSubmitting(true);
 
-    // Get existing submissions from localStorage
-    const existingSubmissions = JSON.parse(localStorage.getItem('mySubmissions') || '[]');
-    
-    // Add new submission
-    const updatedSubmissions = [...existingSubmissions, articleData];
-    
-    // Save to localStorage
-    localStorage.setItem('mySubmissions', JSON.stringify(updatedSubmissions));
+      // Create FormData object for file upload
+      const formDataToSend = new FormData();
+      
+      // Add required fields according to IUploadNews interface
+      formDataToSend.append('title', formData.title);
+      formDataToSend.append('content', formData.content);
+      formDataToSend.append('category', formData.category);
+      // Convert language code to full name
+      formDataToSend.append('language', LANGUAGES[formData.language]);
+      
+      // Add optional fields
+      if (formData.tags && formData.tags.length > 0) {
+        // Send each tag individually
+        formData.tags.forEach(tag => {
+          formDataToSend.append('tags[]', tag);
+        });
+      }
+      
+      if (formData.location) {
+        formDataToSend.append('location', formData.location);
+      }
 
-    toast({
-      title: submitType === 'draft' ? "Draft Saved" : "Article Submitted",
-      description: submitType === 'draft'
-        ? "Your article has been saved as draft"
-        : "Your article has been submitted for review",
-    });
+      // Add images
+      if (formData.coverImage) {
+        formDataToSend.append('images', formData.coverImage);
+      }
+      
+      if (formData.additionalImages.length > 0) {
+        formData.additionalImages.forEach(image => {
+          formDataToSend.append('images', image);
+        });
+      }
 
-    // Reset form only if not saving as draft
-    if (submitType !== 'draft') {
-      setFormData({
-        title: '',
-        content: '',
-        summary: '',
-        category: '',
-        subCategory: '',
-        location: '',
-        tags: [],
-        currentTag: '',
-        coverImage: null,
-        additionalImages: [],
-      });
+      // Send to backend
+      const response = await newsService.uploadNews(formDataToSend);
+
+      if (response.success) {
+        toast.success(
+          submitType === 'draft' 
+            ? "Draft saved successfully" 
+            : "Article submitted for review"
+        );
+
+        // Reset form only if not saving as draft
+        if (submitType !== 'draft') {
+          setFormData({
+            title: '',
+            content: '',
+            summary: '',
+            category: '',
+            subCategory: '',
+            location: '',
+            tags: [],
+            currentTag: '',
+            coverImage: null,
+            additionalImages: [],
+            language: 'en'
+          });
+        }
+      } else {
+        throw new Error(response.message || 'Failed to submit article');
+      }
+    } catch (error) {
+      console.error('Error submitting article:', error);
+      toast.error(error.message || 'Failed to submit article. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   }
 };
@@ -225,6 +279,25 @@ const handleSubmitForReview = (e) => {
   handleSubmit(e, 'pending');
 };
 
+useEffect(() => {
+  const fetchCategories = async () => {
+    setCategoriesLoading(true);
+    setCategoriesError('');
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get('http://localhost:5001/api/v0/category/all', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setCategories(response.data.data || []);
+    } catch (error) {
+      setCategoriesError('Failed to load categories');
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
+  fetchCategories();
+}, []);
+
   return (
     <Box component="form" onSubmit={handleSubmit} noValidate>
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -236,14 +309,16 @@ const handleSubmitForReview = (e) => {
   <Button 
     variant="outlined" 
     startIcon={<Save size={18} />}
-    onClick={handleSaveAsDraft}
+    onClick={(e) => handleSubmit(e, 'draft')}
+    disabled={isSubmitting}
   >
-    Save as Draft
+    {isSubmitting ? <CircularProgress size={20} /> : 'Save as Draft'}
   </Button>
   <Button 
     variant="contained"
-    startIcon={<Send size={18} />}
-    onClick={handleSubmitForReview}
+    startIcon={isSubmitting ? <CircularProgress size={20} /> : <Send size={18} />}
+    onClick={(e) => handleSubmit(e, 'pending')}
+    disabled={isSubmitting}
   >
     Submit for Review
   </Button>
@@ -378,6 +453,23 @@ const handleSubmitForReview = (e) => {
         sx={{ '& .MuiOutlinedInput-notchedOutline': { border: 'none' } }}
       />
     </Box>
+
+    {/* Add Language Selector */}
+    <FormControl fullWidth margin="normal">
+      <InputLabel>Language</InputLabel>
+      <Select
+        name="language"
+        value={formData.language}
+        onChange={handleChange}
+        label="Language"
+      >
+        {Object.entries(LANGUAGES).map(([code, name]) => (
+          <MenuItem key={code} value={code}>
+            {name}
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
   </Paper>
 </Grid>
         
@@ -386,11 +478,7 @@ const handleSubmitForReview = (e) => {
   <Stack spacing={3}>
     <Paper elevation={0} sx={{ p: { xs: 2, sm: 3 } }}>
       {/* Category and Subcategory */}
-      <FormControl 
-        fullWidth 
-        margin="normal"
-        error={!!errors.category}
-      >
+      <FormControl fullWidth margin="normal" error={!!errors.category}>
         <InputLabel>Category</InputLabel>
         <Select
           name="category"
@@ -398,11 +486,12 @@ const handleSubmitForReview = (e) => {
           onChange={handleChange}
           label="Category"
           required
+          disabled={categoriesLoading}
         >
-          {Object.keys(categorySubcategories).map((category) => (
-            <MenuItem key={category} value={category}>
-              {category}
-            </MenuItem>
+          {categoriesLoading && <MenuItem value=""><em>Loading...</em></MenuItem>}
+          {categoriesError && <MenuItem value=""><em>{categoriesError}</em></MenuItem>}
+          {!categoriesLoading && !categoriesError && categories.map((cat) => (
+            <MenuItem key={cat._id} value={cat._id}>{cat.name}</MenuItem>
           ))}
         </Select>
         {errors.category && (
@@ -410,7 +499,7 @@ const handleSubmitForReview = (e) => {
         )}
       </FormControl>
 
-      {formData.category && (
+      {/* {formData.category && (
         <FormControl 
           fullWidth 
           margin="normal"
@@ -429,7 +518,7 @@ const handleSubmitForReview = (e) => {
             ))}
           </Select>
         </FormControl>
-      )}
+      )} */}
 
       {/* Location field */}
       <TextField

@@ -15,6 +15,7 @@ import {
 import { Eye, EyeOff, ArrowLeft, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { authService } from '../../services/auth.service';
 
 const UserRegistration = () => {
   const navigate = useNavigate();
@@ -27,10 +28,7 @@ const UserRegistration = () => {
     phone: ''
   });
   const [step, setStep] = useState(1);
-  const [preferences, setPreferences] = useState({
-    categories: [],
-    languages: []
-  });
+  const [preferences, setPreferences] = useState([]);  // Changed from object to array of strings
 
   const handleChange = (e) => {
     setFormData({
@@ -39,7 +37,7 @@ const UserRegistration = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (step === 1) {
@@ -50,32 +48,29 @@ const UserRegistration = () => {
       setStep(2);
     } else {
       try {
-        // Create complete user data with all necessary fields
         const userData = {
-          id: Date.now().toString(),
-          name: formData.fullName, // Add name field
-          email: formData.email,
-          phone: formData.phone,
-          role: 'user',
-          preferences: preferences, // Add preferences
-          createdAt: new Date().toISOString()
+          name: formData.fullName,
+          email: formData.email.toLowerCase(),
+          password: formData.password,
+          contact: formData.phone,
+          interest: [], // Initially empty array since interests aren't selected yet
+          role: 'user'
         };
 
-        // Save to users array
-        const users = JSON.parse(localStorage.getItem('users') || '[]');
-        users.push(userData);
-        localStorage.setItem('users', JSON.stringify(users));
-
-        // Set authentication data
-        localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('userRole', 'user');
-        localStorage.setItem('currentUser', JSON.stringify(userData)); // Save complete user data
-
-        toast.success('Registration successful!');
-        navigate('/user/dashboard');
+        const response = await authService.register(userData);
+        
+        if (response.success) {
+          toast.success('Registration successful! Please check your email for verification.');
+          navigate('/rolebasedlogin?role=user');
+        } else {
+          toast.error(response.message || 'Registration failed');
+        }
       } catch (error) {
-        toast.error('Registration failed. Please try again.');
         console.error('Registration error:', error);
+        const errorMessage = error.response?.data?.message || 
+          error.message || 
+          'Registration failed. Please try again.';
+        toast.error(errorMessage);
       }
     }
   };

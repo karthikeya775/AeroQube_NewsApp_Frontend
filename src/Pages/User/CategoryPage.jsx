@@ -32,70 +32,139 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import HealthImage from '../../Images/Health.jpg';
 import SportsImage from '../../Images/Sports.jpg';
 import DummyNews from '../../DummyNews';
+import { viewService } from '../../services/view.service';
+import { toast } from 'sonner';
 
 // import SportsImage from '../Images/sports.jpg';
 
+// Language enum to full name mapping
+const LANGUAGE_MAP = {
+  'en': 'English',
+  'hi': 'Hindi',
+  'bn': 'Bengali',
+  'ta': 'Tamil',
+  'te': 'Telugu',
+  'mr': 'Marathi',
+  'gu': 'Gujarati',
+  'kn': 'Kannada',
+  'ml': 'Malayalam',
+  'pa': 'Punjabi',
+  'as': 'Assamese',
+  'or': 'Odia',
+  'bho': 'Bhojpuri',
+  'kok': 'Konkani',
+  'mai': 'Maithili',
+  'mni': 'Manipuri',
+  'sa': 'Sanskrit',
+  'sd': 'Sindhi',
+  'ur': 'Urdu'
+};
 
-      const CategoryPage = ({ onPlayAudio, currentPlayingNews }) => {
-        const [newsItems, setNewsItems] = useState([]);
-        const { category } = useParams();
-        const { globalSearchQuery } = useSearch();
-        const [filteredNews, setFilteredNews] = useState([]);
-        const navigate = useNavigate();
-        const { language } = useLanguage();
-      
-        // Fetch news data and set it when language changes
-        useEffect(() => {
-          const newsData = DummyNews.map(item => {
-            const translatedContent = item.translations && item.translations[language];
-            
-            const title = translatedContent ? translatedContent.headline : item.headline;
-            const summary = translatedContent ? translatedContent.summary : item.summary;
-            const content = translatedContent ? translatedContent.content : item.content;
-            const audioUrl = translatedContent && translatedContent.appwrite_audio_url 
-              ? translatedContent.appwrite_audio_url
-              : item.appwrite_audio_url;
-            
+const CategoryPage = ({ onPlayAudio, currentPlayingNews }) => {
+  const [newsItems, setNewsItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { category } = useParams();
+  const { globalSearchQuery } = useSearch();
+  const [filteredNews, setFilteredNews] = useState([]);
+  const navigate = useNavigate();
+  const { language } = useLanguage();
+
+  // Fetch news data from backend
+  useEffect(() => {
+    const fetchCategoryNews = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await viewService.getNewsByCategory(category);
+        
+        if (response.success) {
+          // Transform the news data to match our frontend structure
+          const transformedNews = response.data.map(item => {
+            // Find the translation for the selected language using full language name
+            const translation = item.translatedServices?.find(
+              service => service.languageCode.toLowerCase() === LANGUAGE_MAP[language].toLowerCase()
+            );
+
             return {
               id: item._id,
-              title: title || '',
-              summary: summary || '',
-              sourceName: item.source || 'Unknown Source',
-              sourceUrl: item.url || '#',
-              category: item.category || 'general',
-              date: item.date || '',
-              time: item.time || '',
-              imageUrl: item.main_image?.url || (item.images && item.images.length > 0 ? item.images[0].url : ''),
-              voice_file: audioUrl || null,
-              content: content || '',
-              originalItem: item
+              title: translation?.title || item.title,
+              content: translation?.translatedContent || item.content,
+              summary: item.summary || '',
+              category: item.category?.name || 'Uncategorized',
+              date: item.createdAt,
+              imageUrl: item.imageURLs?.[0] || 'https://via.placeholder.com/300x200',
+              voice_file: translation?.audioURL || null,
+              sourceName: item.source || 'News Portal',
+              sourceUrl: item.originalURL || '#',
+              tags: item.tags || [],
+              status: item.status,
+              reporterName: item.reportedBy?.name || 'Unknown',
+              reporterEmail: item.reportedBy?.email || '',
+              editorName: item.editedBy?.name || '',
+              editorEmail: item.editedBy?.email || '',
+              isFake: item.isFake || false,
+              location: item.location || '',
+              language: item.language || 'en',
+              originalItem: item // Store the original item for full access to translations
             };
           });
-      
-          setNewsItems(newsData);
-        }, [language]); // Run effect when language changes
-      
-        // Filter news items based on category and search query
-        useEffect(() => {
-          const newsInCategory = newsItems.filter(news => {
-            const matchesCategory = (news.category || '').toLowerCase() === (category || '').toLowerCase();
-            const matchesSearch = !globalSearchQuery || 
-              news.headline.toLowerCase().includes(globalSearchQuery.toLowerCase()) ||
-              news.summary.toLowerCase().includes(globalSearchQuery.toLowerCase());
-      
-            return matchesCategory && matchesSearch;
-          });
-      
-          setFilteredNews(newsInCategory);
-        }, [newsItems, category, globalSearchQuery]); // Re-run if newsItems, category, or search query
-     
+          
+          setNewsItems(transformedNews);
+        } else {
+          setError('Failed to fetch category news');
+          toast.error('Failed to fetch category news');
+        }
+      } catch (error) {
+        console.error('Error fetching category news:', error);
+        setError(error.message || 'Failed to fetch category news');
+        toast.error(error.message || 'Failed to fetch category news');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategoryNews();
+  }, [category, language]);
+
+  // Filter news items based on search query
+  useEffect(() => {
+    if (!globalSearchQuery) {
+      setFilteredNews(newsItems);
+      return;
+    }
+
+    const filtered = newsItems.filter(news => 
+      news.title.toLowerCase().includes(globalSearchQuery.toLowerCase()) ||
+      news.summary?.toLowerCase().includes(globalSearchQuery.toLowerCase()) ||
+      news.content.toLowerCase().includes(globalSearchQuery.toLowerCase())
+    );
+
+    setFilteredNews(filtered);
+  }, [newsItems, globalSearchQuery]);
+
   const handleNewsClick = (newsId) => {
-    // Find the news item by ID
-    const newsItem =filteredNews.find(item => item._id === newsId);
-    console.log("hey i am in handle click: ",newsItem);
-    // Navigate to the news detail page with the news item as state
-    navigate(`/user/news/${newsItem.id}`, { state: { news: newsItem } });
+    const newsItem = filteredNews.find(item => item.id === newsId);
+    if (newsItem) {
+      navigate(`/user/news/${newsId}`, { state: { news: newsItem } });
+    }
   };
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Typography color="error">{error}</Typography>
+      </Box>
+    );
+  }
 
   return (
     <Container maxWidth={false} disableGutters sx={{ px: { xs: 2, sm: 3, md: 4 }, py: 4 }}>
@@ -111,11 +180,10 @@ import DummyNews from '../../DummyNews';
           {filteredNews.map((news) => (
             <Grid item xs={12} sm={6} md={4} key={news.id}>
               <NewsCard 
-                key={news._id}
                 news={news}
                 onPlayAudio={onPlayAudio}
                 currentPlayingNews={currentPlayingNews}
-                onReadMore={() => handleNewsClick(news._id)}
+                onReadMore={() => handleNewsClick(news.id)}
               />
             </Grid>
           ))}

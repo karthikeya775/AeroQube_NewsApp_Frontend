@@ -239,7 +239,7 @@ const NewsDetail = ({ onPlayAudio, currentPlayingNews }) => {
               {news.title}
             </Typography>
             
-            {/* Summary section */}
+            {/* Content section */}
             <Paper
               elevation={0}
               sx={{
@@ -250,32 +250,19 @@ const NewsDetail = ({ onPlayAudio, currentPlayingNews }) => {
                 borderLeft: '4px solid #007bff'
               }}
             >
-              <Typography 
-                variant="h6" 
-                component="h2" 
-                gutterBottom
-                sx={{ fontWeight: 'bold' }}
-              >
-                Summary
-              </Typography>
               <Typography variant="body1" paragraph>
-                {news.summary}
+                {news.content || "Full content of this article is not available at the moment."}
               </Typography>
             </Paper>
-            
-            {/* <Divider sx={{ mb: 3 }} />
-            
-            <Typography variant="body1" paragraph>
-              {news.content || "Full content of this article is not available at the moment."}
-            </Typography> */}
             
             <Box sx={{ mt: 4, display: 'flex', justifyContent: 'space-between' }}>
               <Button 
                 variant="contained" 
                 startIcon={<VolumeUpIcon />}
                 onClick={handlePlayAudio}
+                disabled={!news.voice_file}
               >
-                Listen to Article
+                {news.voice_file ? 'Listen to Article' : 'Audio not available'}
               </Button>
             </Box>
           </CardContent>

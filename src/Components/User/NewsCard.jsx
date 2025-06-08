@@ -12,6 +12,8 @@ import PauseIcon from '@mui/icons-material/Pause';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { categoryService } from '../../services/category.service';
 
 
 const categoryColors = {
@@ -27,18 +29,46 @@ const categoryColors = {
 
 const NewsCard = ({ news, onPlayAudio, currentPlayingNews, onReadMore }) => {
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const [categoryName, setCategoryName] = useState('Loading...');
+  const [categoryId, setCategoryId] = useState(null);
+
+  useEffect(() => {
+    const fetchCategoryName = async () => {
+      try {
+        if (news?.category?._id) {
+          setCategoryId(news.category._id);
+          const response = await categoryService.getCategoryById(news.category._id);
+          if (response.success && response.data) {
+            setCategoryName(response.data.name);
+          } else {
+            setCategoryName('Category Not Found');
+          }
+        } else {
+          setCategoryName('No Category');
+        }
+      } catch (error) {
+        console.error('Error fetching category:', error);
+        setCategoryName('Error Loading Category');
+      }
+    };
+
+    fetchCategoryName();
+  }, [news?.category?._id]);
 
   const {
     id,
-    title = 'Breaking News: AI Transforms News Consumption',
-    summary = 'AI-powered platforms now offer concise news summaries with text, audio, and 3D avatars, revolutionizing how users stay informed.',
-    timestamp = new Date(`${news.date}T${news.time}:00`).toISOString(),
-    imageUrl = 'https://images.unsplash.com/photo-1581090700227-1e8d49c2a960?auto=format&fit=crop&w=800&q=80',
-    sourceName = 'Tech Today',
-    sourceUrl = 'https://example.com',
-    category = 'Technology',
-    voice_file
+    title,
+    summary,
+    sourceName,
+    sourceUrl,
+    date,
+    time,
+    imageUrl,
+    voice_file,
+    content
   } = news || {};
+
 
   const isCurrentlyPlaying = currentPlayingNews?.id === id;
 
@@ -52,8 +82,7 @@ const NewsCard = ({ news, onPlayAudio, currentPlayingNews, onReadMore }) => {
   const handleListen = (e) => {
     e.stopPropagation();
     if (onPlayAudio) {
-      const updatedNews = { ...news };
-      onPlayAudio(updatedNews);
+      onPlayAudio(news);
     }
   };
 
@@ -61,7 +90,7 @@ const NewsCard = ({ news, onPlayAudio, currentPlayingNews, onReadMore }) => {
     if (onReadMore) {
       onReadMore();
     } else if (id) {
-      navigate(`/news/${id}`);
+      navigate(`/user/news/${id}`);
     }
   };
 
@@ -72,15 +101,26 @@ const NewsCard = ({ news, onPlayAudio, currentPlayingNews, onReadMore }) => {
     }
   };
 
-  const formattedDate = timestamp
-    ? new Date(timestamp).toLocaleDateString('en-US', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric'
-      })
-    : 'Unknown date';
+  const formatDate = (dateString) => {
+    try {
+      if (!dateString) return '';
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '';
+      return formatDistanceToNow(date, { addSuffix: true });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return '';
+    }
+  };
 
-  const { bg, color } = categoryColors[category] || categoryColors.Default;
+  const handleCategoryClick = (e) => {
+    e.stopPropagation(); // Prevent card click event
+    if (categoryId) {
+      navigate(`/user/category/${categoryId}`);
+    }
+  };
+
+  const { bg, color } = categoryColors[categoryName] || categoryColors.Default;
 
   return (
     <Card
@@ -112,8 +152,7 @@ const NewsCard = ({ news, onPlayAudio, currentPlayingNews, onReadMore }) => {
     >
       <CardMedia
         component="img"
-        image={imageUrl}
-        alt={title}
+        image={imageUrl || 'https://via.placeholder.com/300x200'}
         sx={{
           height: { xs: 140, sm: 150, md: 200 , lg: 220 },
           objectFit: 'cover'
@@ -123,24 +162,22 @@ const NewsCard = ({ news, onPlayAudio, currentPlayingNews, onReadMore }) => {
       <CardContent sx={{ p: 3, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
         {/* Date, Source, Category Chips */}
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2  }}>
-          {/* <Chip
+          <Chip
             size="small"
-            label={formattedDate}
-            variant="outlined"
-            icon={<AccessTimeIcon fontSize="small" />}
-            sx={{ fontSize: '0.75rem', height: 24, borderRadius: 12 }}
-          /> */}
-           
-           <Chip
-            size="small"
-            label={category}
+            label={categoryName}
             variant="filled"
+            onClick={handleCategoryClick}
             sx={{
               fontSize: '0.75rem',
               height: 24,
               borderRadius: 12,
               backgroundColor: bg,
-              color: color
+              color: color,
+              cursor: 'pointer',
+              '&:hover': {
+                backgroundColor: bg,
+                opacity: 0.9
+              }
             }}
           />
           
@@ -153,21 +190,7 @@ const NewsCard = ({ news, onPlayAudio, currentPlayingNews, onReadMore }) => {
             sx={{ fontSize: '0.75rem', height: 24, borderRadius: 12 }}
             color="primary"
           />
-          {/* <Chip
-            size="small"
-            label={category}
-            variant="filled"
-            sx={{
-              fontSize: '0.75rem',
-              height: 24,
-              borderRadius: 12,
-              backgroundColor: bg,
-              color: color
-            }}
-          />
-          {console.log({ bg, color, category })} */}
         </Box>
-
 
         <Typography variant="h6" component="h2" gutterBottom sx={{
           fontWeight: 'bold',
@@ -193,34 +216,34 @@ const NewsCard = ({ news, onPlayAudio, currentPlayingNews, onReadMore }) => {
           WebkitLineClamp: 3,
           lineHeight: 1.6
         }}>
-          {summary}
+          {summary || content?.substring(0, 150) + '...'}
         </Typography>
 
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 'auto' }}>
-  <Typography
-    variant="caption"
-    color="text.secondary"
-    sx={{ fontStyle: 'italic' }}
-  >
-    {formatDistanceToNow(new Date(formattedDate), { addSuffix: true })}
-  </Typography>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ fontStyle: 'italic' }}
+          >
+            {formatDate(date)}
+          </Typography>
 
-  <Button
-    size="small"
-    variant="contained"
-    color={isCurrentlyPlaying ? "secondary" : "primary"}
-    startIcon={isCurrentlyPlaying ? <PauseIcon /> : <PlayArrowIcon />}
-    onClick={handleListen}
-    sx={{
-      borderRadius: 50,
-      textTransform: 'none',
-      px: 2
-    }}
-    disabled={!hasValidVoiceFile()}
-  >
-    {isCurrentlyPlaying ? "Pause" : "Listen"}
-  </Button>
-</Box>
+          <Button
+            size="small"
+            variant="contained"
+            color={isCurrentlyPlaying ? "secondary" : "primary"}
+            startIcon={isCurrentlyPlaying ? <PauseIcon /> : <PlayArrowIcon />}
+            onClick={handleListen}
+            sx={{
+              borderRadius: 50,
+              textTransform: 'none',
+              px: 2
+            }}
+            disabled={!hasValidVoiceFile()}
+          >
+            {isCurrentlyPlaying ? "Pause" : "Listen"}
+          </Button>
+        </Box>
       </CardContent>
     </Card>
   );

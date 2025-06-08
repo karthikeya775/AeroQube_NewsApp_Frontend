@@ -1,113 +1,115 @@
-import React from "react";
-import { 
-  List, 
-  ListItem,
-  ListItemButton, 
-  ListItemIcon, 
-  ListItemText,
+import React, { useEffect, useState } from 'react';
+import {
   Box,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
   Typography,
-  Divider,
   Avatar,
-} from "@mui/material";
-import { 
-  Layout,
-    FileText,
-    PenSquare,
-  LayoutDashboard,
-  FileEdit, 
-  FilePlus,
-  Bell,
-  MessageCircle,
-  Settings,
-} from "lucide-react";
+  Skeleton,
+  Divider
+} from '@mui/material';
+import { LayoutDashboard, FileText, Send } from 'lucide-react';
+import { authService } from '../../services/auth.service';
+import { toast } from 'sonner';
 
-import {  useNavigate, useLocation} from 'react-router-dom';
+const ReporterSideBar = ({ onNavigate, closeMobileDrawer }) => {
+  const [userProfile, setUserProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-const ReporterSideBar = ({ currentSection, setCurrentSection, closeMobileDrawer }) => {
-   
-    const navigate = useNavigate();
-    const location = useLocation();
-  const currentPath = location.pathname.split('/').pop();
-   
-  const handleNavigation = (path) => {
-    navigate(path);
-    closeMobileDrawer?.();
-  };
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await authService.getProfile();
+        if (response.success) {
+          setUserProfile(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user profile:', error);
+        toast.error('Failed to load profile data');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // Define navigation items
- const navItems = [
-    {
-      label: 'Dashboard',
-      icon: <Layout size={20} />,
-      path: '/reporter/dashboard'
-    },
-    {
-      label: 'My Submissions',
-      icon: <FileText size={20} />,
-      path: '/reporter/submissions'
-    },
-    {
-      label: 'Submit Article',
-      icon: <PenSquare size={20} />,
-      path: '/reporter/submit'
-    }
+    fetchUserProfile();
+  }, []);
+
+  const menuItems = [
+    { text: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/reporter/dashboard' },
+    { text: 'My Submissions', icon: <FileText size={20} />, path: '/reporter/submissions' },
+    { text: 'Submit Article', icon: <Send size={20} />, path: '/reporter/submit' }
   ];
-  
-  const handleNavClick = (sectionId) => {
-    setCurrentSection(sectionId);
-    closeMobileDrawer();
-  };
-  
-  const reporterInfo = {
-    name: "Sarah Johnson",
-    role: "Reporter",
-    joinDate: "Member since May 2023"
-  };
-  
+
   return (
-    <Box sx={{ py: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {/* Reporter info */}
-      <Box sx={{ px: 3, mb: 3, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <Avatar 
-          sx={{ width: 80, height: 80, mb: 2, bgcolor: 'primary.main' }}
-        >
-          {reporterInfo.name.charAt(0)}
-        </Avatar>
-        <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-          {reporterInfo.name}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {reporterInfo.role}
-        </Typography>
-        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
-          {reporterInfo.joinDate}
-        </Typography>
+    <Box sx={{ p: 2 }}>
+      {/* Profile Section */}
+      <Box sx={{ mb: 3, textAlign: 'center' }}>
+        {loading ? (
+          <>
+            <Skeleton variant="circular" width={80} height={80} sx={{ mx: 'auto', mb: 2 }} />
+            <Skeleton variant="text" width={150} sx={{ mx: 'auto' }} />
+            <Skeleton variant="text" width={120} sx={{ mx: 'auto' }} />
+          </>
+        ) : (
+          <>
+            <Avatar
+              src={userProfile?.profileImage}
+              sx={{
+                width: 80,
+                height: 80,
+                mx: 'auto',
+                mb: 2,
+                bgcolor: 'primary.main',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                border: '3px solid white'
+              }}
+            >
+              {userProfile?.name?.charAt(0)}
+            </Avatar>
+            <Typography variant="subtitle1" fontWeight={600}>
+              {userProfile?.name || 'Unknown Reporter'}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {userProfile?.email}
+            </Typography>
+          </>
+        )}
       </Box>
-      
-      <Divider sx={{ mb: 2 }} />
-      
-       <List>
-      {navItems.map((item) => (
-        <ListItem key={item.label} disablePadding>
-          <ListItemButton
-            onClick={() => handleNavigation(item.path)}
-            selected={currentPath === item.path.split('/').pop()}
+
+      <Divider sx={{ my: 2 }} />
+
+      {/* Navigation Menu */}
+      <List>
+        {menuItems.map((item) => (
+          <ListItem
+            button
+            key={item.text}
+            onClick={() => {
+              onNavigate(item.path);
+              closeMobileDrawer?.();
+            }}
+            sx={{
+              borderRadius: 1,
+              mb: 1,
+              '&:hover': {
+                backgroundColor: 'rgba(59, 130, 246, 0.08)'
+              }
+            }}
           >
-            <ListItemIcon>{item.icon}</ListItemIcon>
-            <ListItemText primary={item.label} />
-          </ListItemButton>
-        </ListItem>
-      ))}
-    </List>
-    
-      <Divider sx={{ mt: 2, mb: 2 }} />
-      
-      <Box sx={{ px: 3, py: 1 }}>
-        <Typography variant="body2" color="text.secondary">
-          Reporter Portal v1.0.0
-        </Typography>
-      </Box>
+            <ListItemIcon sx={{ minWidth: 40, color: 'primary.main' }}>
+              {item.icon}
+            </ListItemIcon>
+            <ListItemText 
+              primary={item.text}
+              primaryTypographyProps={{
+                fontWeight: 500
+              }}
+            />
+          </ListItem>
+        ))}
+      </List>
     </Box>
   );
 };

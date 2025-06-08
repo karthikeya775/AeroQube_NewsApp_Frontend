@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -24,7 +24,8 @@ import {
   DialogActions,
   FormControl,
   InputLabel,
-  Select
+  Select,
+  CircularProgress
 } from "@mui/material";
 import {
   Edit,
@@ -36,6 +37,10 @@ import {
   Eye
 } from "lucide-react";
 import { toast } from "sonner";
+import { newsService } from '../../services/news.service';
+import { authService } from '../../services/auth.service';
+import axios from 'axios';
+import { categoryService } from '../../services/category.service';
 
 const sampleContent = [
   {
@@ -261,49 +266,301 @@ const ContentManagement = ({ userRole }) => {
   const [filterStatus, setFilterStatus] = useState("");
   const [confirmDeleteDialog, setConfirmDeleteDialog] = useState(false);
   const [openViewDialog, setOpenViewDialog] = useState(false);
-const [openEditDialog, setOpenEditDialog] = useState(false);
-const [editFormData, setEditFormData] = useState(null);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [editFormData, setEditFormData] = useState(null);
+  const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+  const [aiServicedNews, setAiServicedNews] = useState([]);
+  const [loadingAiService, setLoadingAiService] = useState(false);
 
-  const [articles, setArticles] = useState(() => {
-    // Try to get articles from localStorage first
-    const savedArticles = localStorage.getItem('articles');
-    if (savedArticles) {
-      return JSON.parse(savedArticles);
+  useEffect(() => {
+    fetchArticles();
+    fetchCategories();
+  }, []);
+
+  const fetchArticles = async () => {
+    try {
+      setLoading(true);
+      const response = await newsService.getAllNews();
+      
+      if (response.success && Array.isArray(response.data)) {
+        // Fetch reporter/editor details for each article
+        const articlesWithReporters = await Promise.all(
+          response.data.map(async (article) => {
+            try {
+              let reporterName = '';
+              let reporterEmail = '';
+              let editorName = '';
+              let editorEmail = '';
+
+              // If both reporter and editor are null, it's AI Service
+              if (!article.reportedBy && !article.editedBy) {
+                reporterName = 'AI Service';
+              } else {
+                // Fetch reporter details if exists
+                if (article.reportedBy) {
+                  const reporterResponse = await authService.getUserProfileById(article.reportedBy);
+                  if (reporterResponse.success) {
+                    reporterName = reporterResponse.data?.name || 'Unknown Reporter';
+                    reporterEmail = reporterResponse.data?.email || '';
+                  }
+                }
+
+                // Fetch editor details if exists
+                if (article.editedBy) {
+                  const editorResponse = await authService.getUserProfileById(article.editedBy);
+                  if (editorResponse.success) {
+                    editorName = editorResponse.data?.name || '';
+                    editorEmail = editorResponse.data?.email || '';
+                  }
+                }
+              }
+
+              return {
+                ...article,
+                reporterName,
+                reporterEmail,
+                editorName,
+                editorEmail
+              };
+            } catch (error) {
+              console.error('Error fetching user details:', error);
+              return {
+                ...article,
+                reporterName: (!article.reportedBy && !article.editedBy) ? 'AI Service' : 'Unknown User',
+                reporterEmail: '',
+                editorName: '',
+                editorEmail: ''
+              };
+            }
+          })
+        );
+        
+        setArticles(articlesWithReporters);
+      } else {
+        toast.error(response.message || 'Failed to fetch articles');
+      }
+    } catch (error) {
+      console.error('Error fetching articles:', error);
+      toast.error('An error occurred while fetching articles');
+    } finally {
+      setLoading(false);
     }
-    // If no articles in localStorage, use sample data
-    return sampleContent;
-  });
+  };
 
-   useEffect(() => {
-    localStorage.setItem('articles', JSON.stringify(articles));
-  }, [articles]);
+  const fetchCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      const response = await categoryService.getAllCategories();
+      if (response.success) {
+        setCategories(response.data);
+      } else {
+        toast.error('Failed to fetch categories');
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      toast.error('An error occurred while fetching categories');
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
+  // const fetchAiServicedNews = async () => {
+  //   try {
+  //     setLoadingAiService(true);
+  //     const response = await newsService.getAiServicedNews();
+  //     if (response.success) {
+  //       setAiServicedNews(response.data);
+  //     } else {
+  //       toast.error('Failed to fetch AI serviced news');
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching AI serviced news:', error);
+  //     toast.error('An error occurred while fetching AI serviced news');
+  //   } finally {
+  //     setLoadingAiService(false);
+  //   }
+  // };
+
+  const handleApproveArticle = async (articleId) => {
+    try {
+      const response = await newsService.verifyNews(articleId, {
+        status: 'published'
+      });
+      
+      if (response.success) {
+        toast.success('Article published successfully');
+        fetchArticles(); // Refresh the list
+      } else {
+        toast.error(response.message || 'Failed to publish article');
+      }
+    } catch (error) {
+      console.error('Error publishing article:', error);
+      toast.error('An error occurred while publishing the article');
+    }
+  };
+
+  const handleRejectArticle = async (articleId) => {
+    try {
+      const response = await newsService.verifyNews(articleId, {
+        status: 'rejected'
+      });
+      
+      if (response.success) {
+        toast.success('Article rejected successfully');
+        fetchArticles(); // Refresh the list
+      } else {
+        toast.error(response.message || 'Failed to reject article');
+      }
+    } catch (error) {
+      console.error('Error rejecting article:', error);
+      toast.error('An error occurred while rejecting the article');
+    }
+  };
+
+  const handleDeleteArticle = async (articleId) => {
+    try {
+      const response = await newsService.deleteNews(articleId);
+      
+      if (response.success) {
+        toast.success('Article deleted successfully');
+        fetchArticles(); // Refresh the list
+      } else {
+        toast.error(response.message || 'Failed to delete article');
+      }
+    } catch (error) {
+      console.error('Error deleting article:', error);
+      toast.error('An error occurred while deleting the article');
+    }
+  };
+
+  const handleEditClick = (article) => {
+    setEditFormData(article);
+    setOpenEditDialog(true);
+  };
+
+  const handleEditSubmit = async () => {
+    try {
+      if (!editFormData) return;
+
+      const formData = new FormData();
+      formData.append('title', editFormData.title);
+      formData.append('content', editFormData.content);
+      formData.append('summary', editFormData.summary || '');
+      formData.append('category', editFormData.category?._id || '');
+      formData.append('language', editFormData.language || 'English'); // Default to English
+      formData.append('isFake', editFormData.isFake?.toString() || 'false');
+      
+      // Append tags if they exist
+      if (editFormData.tags && editFormData.tags.length > 0) {
+        editFormData.tags.forEach(tag => {
+          formData.append('tags[]', tag);
+        });
+      }
+
+      // Append location if it exists
+      if (editFormData.location) {
+        formData.append('location', editFormData.location);
+      }
+
+      const response = await newsService.editNews(editFormData._id, formData);
+
+      if (response.success) {
+        toast.success('Article updated and moved to verified section');
+        setOpenEditDialog(false);
+        fetchArticles(); // Refresh the list
+      } else {
+        toast.error(response.message || 'Failed to update article');
+      }
+    } catch (error) {
+      console.error('Error updating article:', error);
+      toast.error('An error occurred while updating the article');
+    }
+  };
+
+  const handleVerifyArticle = async (articleId) => {
+    try {
+      const response = await newsService.verifyNews(articleId, {
+        status: 'accepted'
+      });
+      
+      if (response.success) {
+        toast.success('Article accepted and published successfully');
+        fetchArticles(); // Refresh the list
+      } else {
+        toast.error(response.message || 'Failed to accept article');
+      }
+    } catch (error) {
+      console.error('Error accepting article:', error);
+      toast.error('An error occurred while accepting the article');
+    }
+  };
+
+  const handlePublishArticle = async (articleId) => {
+    try {
+      const response = await newsService.publishNews(articleId);
+      
+      if (response.success) {
+        toast.success('Article published successfully');
+        fetchArticles(); // Refresh the list
+      } else {
+        toast.error(response.message || 'Failed to publish article');
+      }
+    } catch (error) {
+      console.error('Error publishing article:', error);
+      toast.error('An error occurred while publishing the article');
+    }
+  };
+
+  const handleGenerateAiService = async (articleId) => {
+    try {
+      const response = await newsService.generateAiService(articleId);
+      if (response.success) {
+        toast.success('AI service generation request sent successfully');
+        // Refresh both articles and AI serviced news
+        await Promise.all([
+          fetchArticles(),
+          fetchAiServicedNews()
+        ]);
+      } else {
+        toast.error(response.message || 'Failed to generate AI service');
+      }
+    } catch (error) {
+      console.error('Error generating AI service:', error);
+      toast.error('An error occurred while generating AI service');
+    }
+  };
 
   // Filter contents based on tab, search term, and filters
   const filterContent = () => {
-    const statusFilters = ["all", "published", "draft", "pending", "rejected"];
+    const statusFilters = ["all", "pending", "verified", "published", "rejected"];
     const currentStatusFilter = statusFilters[tabValue];
 
     return articles.filter((item) => {
       // Filter by status tab
-      if (currentStatusFilter !== "all" && item.status !== currentStatusFilter) {
-        return false;
+      if (currentStatusFilter !== "all") {
+        if (item.status !== currentStatusFilter) {
+          return false;
+        }
       }
 
       // Filter by search term
       if (
         searchTerm &&
         !item.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !item.author.toLowerCase().includes(searchTerm.toLowerCase())
+        !item.reporterName?.toLowerCase().includes(searchTerm.toLowerCase())
       ) {
         return false;
       }
 
       // Filter by category
-      if (filterCategory && item.category !== filterCategory) {
+      if (filterCategory && item.category?.name !== filterCategory) {
         return false;
       }
 
-      // Additional status filter (used when custom filtering)
+      // Additional status filter
       if (filterStatus && item.status !== filterStatus) {
         return false;
       }
@@ -373,12 +630,7 @@ const [editFormData, setEditFormData] = useState(null);
 
   const handleConfirmDelete = () => {
     if (selectedItem) {
-      const updatedArticles = articles.filter(article => article.id !== selectedItem.id);
-      setArticles(updatedArticles);
-      toast({
-        title: "Content Deleted",
-        description: `"${selectedItem.title}" has been deleted`,
-      });
+      handleDeleteArticle(selectedItem._id);
     }
     setConfirmDeleteDialog(false);
     setSelectedItem(null);
@@ -407,89 +659,74 @@ const handleCloseViewDialog = () => {
   closeActionMenu(); // Now close menu after dialog closes
 };
 
-const handleEditClick = () => {
-  closeActionMenu();
-  setEditFormData(selectedItem);
-  setOpenEditDialog(true);
+const getStatusColor = (status) => {
+  switch (status) {
+    case 'pending':
+      return 'warning';  // Yellow - Needs editing
+    case 'verified':
+      return 'info';     // Blue - Edited by editor
+    case 'accepted':
+      return 'success';  // Green - Approved by admin
+    case 'published':
+      return 'primary';  // Purple - Successfully published
+    case 'rejected':
+      return 'error';    // Red - Rejected
+    default:
+      return 'default';
+  }
 };
 
-const handleEditSubmit = () => {
-  const updatedArticles = articles.map(article => 
-    article.id === editFormData.id ? editFormData : article
+const isActionAllowed = (action, itemStatus) => {
+  if (action === "view") return true;
+  
+  // Editor actions
+  if (userRole === 'editor') {
+    if (action === "edit" && itemStatus === "pending") return true;
+    return false;
+  }
+  
+  // Admin actions
+  if (userRole === 'admin' || userRole === 'superadmin') {
+    if (action === "edit") return true;
+    if (action === "delete" && itemStatus !== "published") return true;
+    return true;
+  }
+  
+  return false;
+};
+
+// Add AI Service button to the table actions
+const renderAiServiceButton = (item) => {
+  if ((userRole === 'admin' || userRole === 'superadmin') && item.status === 'accepted') {
+    const hasAiService = aiServicedNews.some(news => news._id === item._id);
+    return (
+      <Button
+        size="small"
+        variant="outlined"
+        color="secondary"
+        onClick={() => handleGenerateAiService(item._id)}
+        disabled={hasAiService || loadingAiService}
+        sx={{ ml: 1 }}
+      >
+        {loadingAiService ? 'Generating...' : hasAiService ? 'AI Service Generated' : 'Generate AI Service'}
+      </Button>
+    );
+  }
+  return null;
+};
+
+if (loading) {
+  return (
+    <Box sx={{ 
+      height: '100vh',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center'
+    }}>
+      <CircularProgress />
+    </Box>
   );
-  setArticles(updatedArticles);
-  setOpenEditDialog(false);
-  setSelectedItem(null);
-  setEditFormData(null);
-  toast({
-    title: "Article Updated",
-    description: "The article has been updated successfully",
-  });
-};
-
-const handleApproveArticle = (articleId) => {
-  const updatedArticles = articles.map(article => 
-    article.id === articleId 
-      ? { 
-          ...article, 
-          status: 'published', 
-          publishedDate: new Date().toISOString().split('T')[0] 
-        }
-      : article
-  );
-  setArticles(updatedArticles);
-  toast({
-    title: "Article Approved",
-    description: "The article has been published successfully",
-  });
-};
-
-const handleRejectArticle = (articleId) => {
-  const updatedArticles = articles.map(article => 
-    article.id === articleId 
-      ? { 
-          ...article, 
-          status: 'rejected',
-          publishedDate: null
-        }
-      : article
-  );
-  setArticles(updatedArticles);
-  toast({
-    title: "Article Rejected",
-    description: "The article has been rejected",
-  });
-};
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "published":
-        return "success";
-      case "draft":
-        return "default";
-      case "pending":
-        return "warning";
-      case "rejected":
-        return "error";
-      default:
-        return "default";
-    }
-  };
-
-  const isActionAllowed = (action, itemStatus) => {
-      
-      if(action === "view") return true;
-      if(action === "edit" && itemStatus === "draft") return true;
-      if (action === "edit" && itemStatus === "published") return false;
-      if (action === "edit" && itemStatus === "pending") return true;
-      if (action === "edit" && itemStatus === "rejected") return false;
-      if (action === "delete" && itemStatus === "draft") return true;
-      if (action === "delete" && itemStatus === "published") return false;
-      if (action === "delete" && itemStatus === "pending") return true;
-      if (action === "delete" && itemStatus === "rejected") return false;
-      
-    
-  };
+}
 
   return (
     <Box sx={{ 
@@ -521,9 +758,9 @@ const handleRejectArticle = (articleId) => {
             scrollButtons="auto"
           >
             <Tab label="All Content" />
+            <Tab label="Pending" />
+            <Tab label="Verified" />
             <Tab label="Published" />
-            <Tab label="Drafts" />
-            <Tab label="Pending Review" />
             <Tab label="Rejected" />
           </Tabs>
         </Box>
@@ -577,7 +814,7 @@ const handleRejectArticle = (articleId) => {
   <TableRow>
     <TableCell>Title</TableCell>
     <TableCell>Category</TableCell>
-    <TableCell>Author</TableCell>
+    <TableCell>Reporter</TableCell>
     <TableCell>Status</TableCell>
     <TableCell>Submitted Date</TableCell>
     {(userRole === 'admin' || userRole === 'editor') && (
@@ -589,10 +826,45 @@ const handleRejectArticle = (articleId) => {
 <TableBody>
   {filteredContent.length > 0 ? (
     filteredContent.map((item) => (
-      <TableRow key={item.id}>
+      <TableRow key={item._id}>
         <TableCell>{item.title}</TableCell>
-        <TableCell>{item.category}</TableCell>
-        <TableCell>{item.author}</TableCell>
+        <TableCell>{item.category?.name}</TableCell>
+        <TableCell>
+          <Box>
+            {!item.reportedBy && !item.editedBy ? (
+              <Typography variant="body2" color="primary">
+                AI Service
+              </Typography>
+            ) : (
+              <>
+                {item.reportedBy && (
+                  <>
+                    <Typography variant="body2">
+                      Reported by: {item.reporterName}
+                    </Typography>
+                    {item.reporterEmail && (
+                      <Typography variant="caption" color="text.secondary">
+                        {item.reporterEmail}
+                      </Typography>
+                    )}
+                  </>
+                )}
+                {item.editedBy && (
+                  <>
+                    <Typography variant="body2" color="primary">
+                      Edited by: {item.editorName}
+                    </Typography>
+                    {item.editorEmail && (
+                      <Typography variant="caption" color="text.secondary">
+                        {item.editorEmail}
+                      </Typography>
+                    )}
+                  </>
+                )}
+              </>
+            )}
+          </Box>
+        </TableCell>
         <TableCell>
           <Chip 
             label={item.status.charAt(0).toUpperCase() + item.status.slice(1)}
@@ -601,25 +873,39 @@ const handleRejectArticle = (articleId) => {
           />
         </TableCell>
         <TableCell>
-          {new Date(item.submittedDate).toLocaleDateString()}
+          {new Date(item.createdAt).toLocaleDateString()}
         </TableCell>
         {(userRole === 'admin' || userRole === 'editor') && (
           <TableCell align="right">
             {item.status === 'pending' && (
               <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                {userRole === 'editor' && (
+                  <Button
+                    size="small"
+                    variant="contained"
+                    color="primary"
+                    onClick={() => handleEditClick(item)}
+                  >
+                    Edit
+                  </Button>
+                )}
+              </Box>
+            )}
+            {item.status === 'verified' && (userRole === 'admin' || userRole === 'superadmin') && (
+              <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
                 <Button
                   size="small"
                   variant="contained"
                   color="success"
-                  onClick={() => handleApproveArticle(item.id)}
+                  onClick={() => handleVerifyArticle(item._id)}
                 >
-                  Approve
+                  Accept
                 </Button>
                 <Button
                   size="small"
                   variant="outlined"
                   color="error"
-                  onClick={() => handleRejectArticle(item.id)}
+                  onClick={() => handleRejectArticle(item._id)}
                 >
                   Reject
                 </Button>
@@ -667,7 +953,7 @@ const handleRejectArticle = (articleId) => {
           </MenuItem>
         )}
         {isActionAllowed("edit", selectedItem?.status || "") && (
-          <MenuItem onClick={handleEditClick} sx={{ gap: 1.5 }}>
+          <MenuItem onClick={() => handleEditClick(selectedItem)} sx={{ gap: 1.5 }}>
             <Edit size={18} />
             <Typography variant="body2">Edit</Typography>
           </MenuItem>
@@ -692,11 +978,11 @@ const handleRejectArticle = (articleId) => {
               onChange={handleCategoryChange}
             >
               <MenuItem value="">All Categories</MenuItem>
-              <MenuItem value="Technology">Technology</MenuItem>
-              <MenuItem value="Business">Business</MenuItem>
-              <MenuItem value="Science">Science</MenuItem>
-              <MenuItem value="Sports">Sports</MenuItem>
-              <MenuItem value="Entertainment">Entertainment</MenuItem>
+              {categories.map((category) => (
+                <MenuItem key={category._id} value={category.name}>
+                  {category.name}
+                </MenuItem>
+              ))}
             </Select>
           </FormControl>
 
@@ -762,16 +1048,16 @@ const handleRejectArticle = (articleId) => {
             color={getStatusColor(selectedItem.status)}
             size="small"
           />
-          <Chip label={selectedItem.category} size="small" />
+          <Chip label={selectedItem.category?.name} size="small" />
         </Box>
 
         <Typography variant="h5" gutterBottom>
-          {selectedItem.headline}
+          {selectedItem.title}
         </Typography>
 
         <Typography variant="caption" display="block" sx={{ color: 'text.secondary' }}>
-          By {selectedItem.author} • 
-          Submitted on {new Date(selectedItem.submittedDate).toLocaleDateString()}
+          By {selectedItem.reporterName} ({selectedItem.reporterEmail}) • 
+          Submitted on {new Date(selectedItem.createdAt).toLocaleDateString()}
           {selectedItem.publishedDate && 
             ` • Published on ${new Date(selectedItem.publishedDate).toLocaleDateString()}`
           }
@@ -829,20 +1115,19 @@ const handleRejectArticle = (articleId) => {
       <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
         <TextField
           fullWidth
-          label="Headline"
-          value={editFormData.headline}
-          onChange={(e) => setEditFormData({ ...editFormData, headline: e.target.value })}
+          label="Title"
+          value={editFormData.title}
+          onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
           required
         />
 
         <TextField
           fullWidth
           label="Summary"
-          value={editFormData.summary}
+          value={editFormData.summary || ''}
           onChange={(e) => setEditFormData({ ...editFormData, summary: e.target.value })}
           multiline
           rows={3}
-          required
         />
 
         <TextField
@@ -858,20 +1143,77 @@ const handleRejectArticle = (articleId) => {
         <FormControl fullWidth>
           <InputLabel>Category</InputLabel>
           <Select
-            value={editFormData.category}
-            onChange={(e) => setEditFormData({ ...editFormData, category: e.target.value })}
+            value={editFormData.category?._id || ''}
+            onChange={(e) => {
+              const selectedCategory = categories.find(cat => cat._id === e.target.value);
+              setEditFormData({ 
+                ...editFormData, 
+                category: selectedCategory 
+              });
+            }}
             label="Category"
+            required
           >
-            <MenuItem value="Technology">Technology</MenuItem>
-            <MenuItem value="Business">Business</MenuItem>
-            <MenuItem value="Science">Science</MenuItem>
-            <MenuItem value="Sports">Sports</MenuItem>
-            <MenuItem value="Entertainment">Entertainment</MenuItem>
+            {categories.map((category) => (
+              <MenuItem key={category._id} value={category._id}>
+                {category.name}
+              </MenuItem>
+            ))}
           </Select>
         </FormControl>
 
+        <FormControl fullWidth>
+          <InputLabel>Language</InputLabel>
+          <Select
+            value={editFormData.language || 'English'}
+            onChange={(e) => setEditFormData({ ...editFormData, language: e.target.value })}
+            label="Language"
+            required
+          >
+            <MenuItem value="English">English</MenuItem>
+            <MenuItem value="Hindi">Hindi</MenuItem>
+            <MenuItem value="Bengali">Bengali</MenuItem>
+            <MenuItem value="Tamil">Tamil</MenuItem>
+            <MenuItem value="Telugu">Telugu</MenuItem>
+            <MenuItem value="Marathi">Marathi</MenuItem>
+            <MenuItem value="Gujarati">Gujarati</MenuItem>
+            <MenuItem value="Kannada">Kannada</MenuItem>
+            <MenuItem value="Malayalam">Malayalam</MenuItem>
+            <MenuItem value="Punjabi">Punjabi</MenuItem>
+            <MenuItem value="Assamese">Assamese</MenuItem>
+            <MenuItem value="Bhojpuri">Bhojpuri</MenuItem>
+            <MenuItem value="Konkani">Konkani</MenuItem>
+            <MenuItem value="Maithili">Maithili</MenuItem>
+            <MenuItem value="Manipuri">Manipuri</MenuItem>
+            <MenuItem value="Odia">Odia</MenuItem>
+            <MenuItem value="Sanskrit">Sanskrit</MenuItem>
+            <MenuItem value="Sindhi">Sindhi</MenuItem>
+            <MenuItem value="Urdu">Urdu</MenuItem>
+          </Select>
+        </FormControl>
+
+        <FormControl fullWidth>
+          <InputLabel>Fake News Status</InputLabel>
+          <Select
+            value={editFormData.isFake?.toString() || 'false'}
+            onChange={(e) => setEditFormData({ ...editFormData, isFake: e.target.value === 'true' })}
+            label="Fake News Status"
+            required
+          >
+            <MenuItem value="false">Not Fake</MenuItem>
+            <MenuItem value="true">Fake</MenuItem>
+          </Select>
+        </FormControl>
+
+        <TextField
+          fullWidth
+          label="Location"
+          value={editFormData.location || ''}
+          onChange={(e) => setEditFormData({ ...editFormData, location: e.target.value })}
+        />
+
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-          {editFormData.tags.map((tag, index) => (
+          {editFormData.tags?.map((tag, index) => (
             <Chip
               key={index}
               label={tag}
