@@ -51,12 +51,12 @@ const AdminSidebar = ({
       icon: <Users size={20} />,
       roles: ["admin"]
     },
-    {
-      id: "settings",
-      label: "System Settings",
-      icon: <Settings size={20} />,
-      roles: ["admin"]
-    }
+    // {
+    //   id: "settings",
+    //   label: "System Settings",
+    //   icon: <Settings size={20} />,
+    //   roles: ["admin"]
+    // }
   ];
   
   const handleNavClick = (sectionId) => {

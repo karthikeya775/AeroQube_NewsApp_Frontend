@@ -25,7 +25,8 @@ import {
   FormControl,
   InputLabel,
   Select,
-  CircularProgress
+  CircularProgress,
+  TablePagination
 } from "@mui/material";
 import {
   Edit,
@@ -41,220 +42,6 @@ import { newsService } from '../../services/news.service';
 import { authService } from '../../services/auth.service';
 import axios from 'axios';
 import { categoryService } from '../../services/category.service';
-
-const sampleContent = [
-  {
-    id: 1,
-    title: "The Future of AI in Healthcare",
-    headline: "AI Revolution in Healthcare: Transforming Patient Care",
-    category: "Technology",
-    author: "Jane Smith",
-    status: "published",
-    submittedDate: "2025-05-12",
-    publishedDate: "2025-05-14",
-    summary: "Exploring how artificial intelligence is revolutionizing healthcare delivery and improving patient outcomes across global healthcare systems.",
-    content: "Artificial intelligence is fundamentally transforming healthcare delivery... [detailed content]",
-    tags: ["Healthcare", "AI", "Technology", "Medicine"],
-    image: "https://example.com/ai-healthcare.jpg",
-    views: 1205
-  },
-  {
-    id: 2,
-    title: "Climate Change Effects on Global Economy",
-    headline: "Economic Impact: Climate Crisis Reshapes Global Markets",
-    category: "Business",
-    author: "John Doe",
-    status: "pending",
-    submittedDate: "2025-05-13",
-    publishedDate: null,
-    summary: "Analysis of how climate change is impacting global markets and economic strategies worldwide.",
-    content: "The global economy faces unprecedented challenges as climate change... [detailed content]",
-    tags: ["Climate Change", "Economy", "Global Markets", "Sustainability"],
-    image: "https://example.com/climate-economy.jpg",
-    views: 0
-  },
-  {
-    id: 3,
-    title: "Breakthrough in Quantum Computing",
-    headline: "Quantum Computing Milestone: New Era of Computing Begins",
-    category: "Science",
-    author: "Alex Johnson",
-    status: "published",
-    submittedDate: "2025-05-10",
-    publishedDate: "2025-05-11",
-    summary: "Scientists achieve major breakthrough in quantum computing, opening new possibilities for complex problem-solving.",
-    content: "In a groundbreaking development, researchers have achieved... [detailed content]",
-    tags: ["Quantum Computing", "Technology", "Science", "Innovation"],
-    image: "https://example.com/quantum-computing.jpg",
-    views: 892
-  },
-  {
-    id: 4,
-    title: "The Rise of Sustainable Fashion",
-    headline: "Fashion Industry's Green Revolution Takes Center Stage",
-    category: "Entertainment",
-    author: "Sarah Williams",
-    status: "pending",
-    submittedDate: "2025-05-14",
-    publishedDate: null,
-    summary: "How sustainable practices are reshaping the fashion industry and influencing consumer behavior.",
-    content: "The fashion industry is undergoing a major transformation... [detailed content]",
-    tags: ["Fashion", "Sustainability", "Environment", "Lifestyle"],
-    image: "https://example.com/sustainable-fashion.jpg",
-    views: 0
-  },
-  {
-    id: 5,
-    title: "Space Tourism: The Next Frontier",
-    headline: "Commercial Space Travel Opens New Chapter in Tourism",
-    category: "Science",
-    author: "Michael Brown",
-    status: "rejected",
-    submittedDate: "2025-05-08",
-    publishedDate: null,
-    summary: "Examining the rapidly evolving space tourism industry and its implications for future travel.",
-    content: "As private companies push the boundaries of space exploration... [detailed content]",
-    tags: ["Space", "Tourism", "Technology", "Innovation"],
-    image: "https://example.com/space-tourism.jpg",
-    views: 0
-  },
-  {
-    id: 6,
-    title: "Cybersecurity in the Age of Remote Work",
-    headline: "Remote Work Revolution Sparks Cybersecurity Concerns",
-    category: "Technology",
-    author: "Lisa Chen",
-    status: "published",
-    submittedDate: "2025-05-09",
-    publishedDate: "2025-05-10",
-    summary: "How companies are adapting their cybersecurity strategies to protect remote workforces.",
-    content: "The shift to remote work has created new challenges... [detailed content]",
-    tags: ["Cybersecurity", "Remote Work", "Technology", "Business"],
-    image: "https://example.com/cybersecurity.jpg",
-    views: 756
-  },
-
-  {
-    id: 7,
-    title: "Green Architecture Gains Momentum",
-    headline: "Sustainable Buildings on the Rise in Urban India",
-    category: "Environment",
-    author: "Arjun Mehta",
-    status: "pending",
-    submittedDate: "2025-05-11",
-    publishedDate: null,
-    summary: "Architects and developers focus on eco-friendly building practices.",
-    content: "With rising environmental awareness, green design is becoming standard...",
-    tags: ["Architecture", "Sustainability", "Urban", "Green Building"],
-    image: "https://example.com/green-building.jpg",
-    views: 312
-  },
-  {
-    id: 8,
-    title: "AI-Powered Education Tools Shape Classrooms",
-    headline: "AI Revolutionizes Learning Experience for Students",
-    category: "Education",
-    author: "Neha Kapoor",
-    status: "published",
-    submittedDate: "2025-05-08",
-    publishedDate: "2025-05-10",
-    summary: "Schools adopt AI tools to personalize learning paths for students.",
-    content: "AI is enabling teachers to better understand student strengths and weaknesses...",
-    tags: ["AI", "Education", "EdTech", "Innovation"],
-    image: "https://example.com/ai-education.jpg",
-    views: 1345
-  },
-  {
-    id: 9,
-    title: "Monsoon Preparedness in Coastal Cities",
-    headline: "Coastal Towns Brace for Intense Monsoon",
-    category: "Disaster",
-    author: "Rajiv Menon",
-    status: "rejected",
-    submittedDate: "2025-05-12",
-    publishedDate: null,
-    summary: "Local governments outline new measures to mitigate flooding this season.",
-    content: "Sandbags, drainage system upgrades, and evacuation drills underway...",
-    tags: ["Monsoon", "Disaster", "Flood", "Preparedness"],
-    image: "https://example.com/monsoon-city.jpg",
-    views: 0
-  },
-  {
-    id: 10,
-    title: "Rural Entrepreneurs Break Barriers",
-    headline: "Micro Startups Drive Change in Villages",
-    category: "Business",
-    author: "Fatima Ali",
-    status: "rejected",
-    submittedDate: "2025-05-06",
-    publishedDate: null,
-    summary: "Women and youth launch innovative businesses in rural communities.",
-    content: "Support programs and digital tools have empowered grassroots innovation...",
-    tags: ["Entrepreneurship", "Rural", "Innovation", "Business"],
-    image: "https://example.com/rural-startup.jpg",
-    views: 97
-  },
-  {
-    id: 11,
-    title: "Youth in Politics: A Rising Trend",
-    headline: "Young Leaders Redefine Governance",
-    category: "Politics",
-    author: "Sneha Roy",
-    status: "published",
-    submittedDate: "2025-05-03",
-    publishedDate: "2025-05-05",
-    summary: "An increasing number of youth are running for public office and influencing policy.",
-    content: "From city councils to national forums, youth voices are growing stronger...",
-    tags: ["Youth", "Politics", "Leadership", "Governance"],
-    image: "https://example.com/youth-politics.jpg",
-    views: 568
-  },
-  {
-    id: 12,
-    title: "Wildlife Corridor Restored in Northern India",
-    headline: "Conservationists Celebrate Major Milestone for Biodiversity",
-    category: "Environment",
-    author: "Dr. Kavita Singh",
-    status: "pending",
-    submittedDate: "2025-05-13",
-    publishedDate: null,
-    summary: "Years of effort have led to a successful restoration of a critical wildlife route.",
-    content: "The corridor will help reduce human-wildlife conflict and increase safe animal movement...",
-    tags: ["Wildlife", "Conservation", "Biodiversity", "Habitat"],
-    image: "https://example.com/wildlife-corridor.jpg",
-    views: 411
-  },
-  {
-    id: 13,
-    title: "Digital Payments Boom in Tier-2 Cities",
-    headline: "Cashless Economy Finds New Ground in Smaller Towns",
-    category: "Economy",
-    author: "Vikas Bhatia",
-    status: "published",
-    submittedDate: "2025-05-04",
-    publishedDate: "2025-05-06",
-    summary: "Smartphones and UPI have accelerated digital payment adoption beyond metro areas.",
-    content: "Merchants and consumers are embracing cashless transactions with ease...",
-    tags: ["Digital India", "UPI", "Payments", "Economy"],
-    image: "https://example.com/digital-payments.jpg",
-    views: 982
-  },
-  {
-    id: 14,
-    title: "Mental Health Campaigns in Colleges",
-    headline: "Colleges Launch Initiatives to Support Student Mental Health",
-    category: "Health",
-    author: "Ananya Dutta",
-    status: "pending",
-    submittedDate: "2025-05-14",
-    publishedDate: null,
-    summary: "Workshops and helplines are being introduced to support student well-being.",
-    content: "Educational institutions recognize the growing need for mental health awareness...",
-    tags: ["Mental Health", "Students", "Colleges", "Support"],
-    image: "https://example.com/mental-health.jpg",
-    views: 0
-  },
-];
 
 const ContentManagement = ({ userRole }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -275,31 +62,50 @@ const ContentManagement = ({ userRole }) => {
   const [aiServicedNews, setAiServicedNews] = useState([]);
   const [loadingAiService, setLoadingAiService] = useState(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
+  const [paginationLoading, setPaginationLoading] = useState(false);
+
   useEffect(() => {
-    fetchArticles();
+    fetchArticles(0, rowsPerPage);
     fetchCategories();
   }, []);
 
-  const fetchArticles = async () => {
+  const fetchArticles = async (page = 0, limit = rowsPerPage) => {
     try {
-      setLoading(true);
-      const response = await newsService.getAllNews();
+      setLoading(page === 0);
+      setPaginationLoading(page > 0);
       
-      if (response.success && Array.isArray(response.data)) {
-        // Fetch reporter/editor details for each article
+      // Calculate offset properly
+      const offset = page + 1 ;
+      
+      // Use the calculated values, not hardcoded ones
+      const response = await newsService.getAllNews({
+        limit,   // Use parameter
+        offset,  // Use calculated offset
+      });
+
+      console.log('Fetched articles:', response);
+      console.log("response.sucess",Array.isArray(response.data))
+      
+      if (response.success && response.data && Array.isArray(response.data.data)) {
+        setTotalCount(response.data.totalCounts || response.data.data.length);
+        
+        console.log('Total count:', response.totalCount);
+        // Rest of your code remains the same...
         const articlesWithReporters = await Promise.all(
-          response.data.map(async (article) => {
+          response.data.data.map(async (article) => {
             try {
               let reporterName = '';
               let reporterEmail = '';
               let editorName = '';
               let editorEmail = '';
-
-              // If both reporter and editor are null, it's AI Service
+  
               if (!article.reportedBy && !article.editedBy) {
                 reporterName = 'AI Service';
               } else {
-                // Fetch reporter details if exists
                 if (article.reportedBy) {
                   const reporterResponse = await authService.getUserProfileById(article.reportedBy);
                   if (reporterResponse.success) {
@@ -307,8 +113,7 @@ const ContentManagement = ({ userRole }) => {
                     reporterEmail = reporterResponse.data?.email || '';
                   }
                 }
-
-                // Fetch editor details if exists
+  
                 if (article.editedBy) {
                   const editorResponse = await authService.getUserProfileById(article.editedBy);
                   if (editorResponse.success) {
@@ -317,7 +122,7 @@ const ContentManagement = ({ userRole }) => {
                   }
                 }
               }
-
+  
               return {
                 ...article,
                 reporterName,
@@ -347,8 +152,10 @@ const ContentManagement = ({ userRole }) => {
       toast.error('An error occurred while fetching articles');
     } finally {
       setLoading(false);
+      setPaginationLoading(false);
     }
   };
+  
 
   const fetchCategories = async () => {
     try {
@@ -367,22 +174,18 @@ const ContentManagement = ({ userRole }) => {
     }
   };
 
-  // const fetchAiServicedNews = async () => {
-  //   try {
-  //     setLoadingAiService(true);
-  //     const response = await newsService.getAiServicedNews();
-  //     if (response.success) {
-  //       setAiServicedNews(response.data);
-  //     } else {
-  //       toast.error('Failed to fetch AI serviced news');
-  //     }
-  //   } catch (error) {
-  //     console.error('Error fetching AI serviced news:', error);
-  //     toast.error('An error occurred while fetching AI serviced news');
-  //   } finally {
-  //     setLoadingAiService(false);
-  //   }
-  // };
+  // Pagination handlers
+  const handlePageChange = (event, newPage) => {
+    setCurrentPage(newPage);
+    fetchArticles(newPage, rowsPerPage);
+  };
+
+  const handleRowsPerPageChange = (event) => {
+    const newRowsPerPage = parseInt(event.target.value, 10);
+    setRowsPerPage(newRowsPerPage);
+    setCurrentPage(0);
+    fetchArticles(0, newRowsPerPage);
+  };
 
   const handleApproveArticle = async (articleId) => {
     try {
@@ -392,7 +195,7 @@ const ContentManagement = ({ userRole }) => {
       
       if (response.success) {
         toast.success('Article published successfully');
-        fetchArticles(); // Refresh the list
+        fetchArticles(currentPage, rowsPerPage);
       } else {
         toast.error(response.message || 'Failed to publish article');
       }
@@ -410,7 +213,7 @@ const ContentManagement = ({ userRole }) => {
       
       if (response.success) {
         toast.success('Article rejected successfully');
-        fetchArticles(); // Refresh the list
+        fetchArticles(currentPage, rowsPerPage);
       } else {
         toast.error(response.message || 'Failed to reject article');
       }
@@ -426,7 +229,7 @@ const ContentManagement = ({ userRole }) => {
       
       if (response.success) {
         toast.success('Article deleted successfully');
-        fetchArticles(); // Refresh the list
+        fetchArticles(currentPage, rowsPerPage);
       } else {
         toast.error(response.message || 'Failed to delete article');
       }
@@ -450,17 +253,15 @@ const ContentManagement = ({ userRole }) => {
       formData.append('content', editFormData.content);
       formData.append('summary', editFormData.summary || '');
       formData.append('category', editFormData.category?._id || '');
-      formData.append('language', editFormData.language || 'English'); // Default to English
+      formData.append('language', editFormData.language || 'English');
       formData.append('isFake', editFormData.isFake?.toString() || 'false');
       
-      // Append tags if they exist
       if (editFormData.tags && editFormData.tags.length > 0) {
         editFormData.tags.forEach(tag => {
           formData.append('tags[]', tag);
         });
       }
 
-      // Append location if it exists
       if (editFormData.location) {
         formData.append('location', editFormData.location);
       }
@@ -470,7 +271,7 @@ const ContentManagement = ({ userRole }) => {
       if (response.success) {
         toast.success('Article updated and moved to verified section');
         setOpenEditDialog(false);
-        fetchArticles(); // Refresh the list
+        fetchArticles(currentPage, rowsPerPage);
       } else {
         toast.error(response.message || 'Failed to update article');
       }
@@ -488,7 +289,7 @@ const ContentManagement = ({ userRole }) => {
       
       if (response.success) {
         toast.success('Article accepted and published successfully');
-        fetchArticles(); // Refresh the list
+        fetchArticles(currentPage, rowsPerPage);
       } else {
         toast.error(response.message || 'Failed to accept article');
       }
@@ -504,7 +305,7 @@ const ContentManagement = ({ userRole }) => {
       
       if (response.success) {
         toast.success('Article published successfully');
-        fetchArticles(); // Refresh the list
+        fetchArticles(currentPage, rowsPerPage);
       } else {
         toast.error(response.message || 'Failed to publish article');
       }
@@ -519,11 +320,7 @@ const ContentManagement = ({ userRole }) => {
       const response = await newsService.generateAiService(articleId);
       if (response.success) {
         toast.success('AI service generation request sent successfully');
-        // Refresh both articles and AI serviced news
-        await Promise.all([
-          fetchArticles(),
-          fetchAiServicedNews()
-        ]);
+        fetchArticles(currentPage, rowsPerPage);
       } else {
         toast.error(response.message || 'Failed to generate AI service');
       }
@@ -539,14 +336,12 @@ const ContentManagement = ({ userRole }) => {
     const currentStatusFilter = statusFilters[tabValue];
 
     return articles.filter((item) => {
-      // Filter by status tab
       if (currentStatusFilter !== "all") {
         if (item.status !== currentStatusFilter) {
           return false;
         }
       }
 
-      // Filter by search term
       if (
         searchTerm &&
         !item.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
@@ -555,12 +350,10 @@ const ContentManagement = ({ userRole }) => {
         return false;
       }
 
-      // Filter by category
       if (filterCategory && item.category?.name !== filterCategory) {
         return false;
       }
 
-      // Additional status filter
       if (filterStatus && item.status !== filterStatus) {
         return false;
       }
@@ -583,6 +376,8 @@ const ContentManagement = ({ userRole }) => {
   
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
+    setCurrentPage(0);
+    fetchArticles(0, rowsPerPage);
   };
 
   const handleSearch = (event) => {
@@ -636,7 +431,7 @@ const ContentManagement = ({ userRole }) => {
     setSelectedItem(null);
   };
 
-   const handleStatusUpdate = (articleId, newStatus) => {
+  const handleStatusUpdate = (articleId, newStatus) => {
     const updatedArticles = articles.map(article => 
       article.id === articleId 
         ? { ...article, status: newStatus, date: new Date().toISOString().split('T')[0] }
@@ -645,94 +440,88 @@ const ContentManagement = ({ userRole }) => {
     setArticles(updatedArticles);
   };
 
- const handleViewClick = () => {
-  if (selectedItem) {
-    console.log('Opening dialog with:', selectedItem);
-    setOpenViewDialog(true);
-    // Don't close the menu yet to keep the selectedItem
-  }
-};
+  const handleViewClick = () => {
+    if (selectedItem) {
+      console.log('Opening dialog with:', selectedItem);
+      setOpenViewDialog(true);
+    }
+  };
 
-// Add separate function to close dialog
-const handleCloseViewDialog = () => {
-  setOpenViewDialog(false);
-  closeActionMenu(); // Now close menu after dialog closes
-};
+  const handleCloseViewDialog = () => {
+    setOpenViewDialog(false);
+    closeActionMenu();
+  };
 
-const getStatusColor = (status) => {
-  switch (status) {
-    case 'pending':
-      return 'warning';  // Yellow - Needs editing
-    case 'verified':
-      return 'info';     // Blue - Edited by editor
-    case 'accepted':
-      return 'success';  // Green - Approved by admin
-    case 'published':
-      return 'primary';  // Purple - Successfully published
-    case 'rejected':
-      return 'error';    // Red - Rejected
-    default:
-      return 'default';
-  }
-};
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending':
+        return 'warning';
+      case 'verified':
+        return 'info';
+      case 'accepted':
+        return 'success';
+      case 'published':
+        return 'primary';
+      case 'rejected':
+        return 'error';
+      default:
+        return 'default';
+    }
+  };
 
-const isActionAllowed = (action, itemStatus) => {
-  if (action === "view") return true;
-  
-  // Editor actions
-  if (userRole === 'editor') {
-    if (action === "edit" && itemStatus === "pending") return true;
+  const isActionAllowed = (action, itemStatus) => {
+    if (action === "view") return true;
+    
+    if (userRole === 'editor') {
+      if (action === "edit" && itemStatus === "pending") return true;
+      return false;
+    }
+    
+    if (userRole === 'admin' || userRole === 'superadmin') {
+      if (action === "edit") return true;
+      if (action === "delete" && itemStatus !== "published") return true;
+      return true;
+    }
+    
     return false;
-  }
-  
-  // Admin actions
-  if (userRole === 'admin' || userRole === 'superadmin') {
-    if (action === "edit") return true;
-    if (action === "delete" && itemStatus !== "published") return true;
-    return true;
-  }
-  
-  return false;
-};
+  };
 
-// Add AI Service button to the table actions
-const renderAiServiceButton = (item) => {
-  if ((userRole === 'admin' || userRole === 'superadmin') && item.status === 'accepted') {
-    const hasAiService = aiServicedNews.some(news => news._id === item._id);
+  const renderAiServiceButton = (item) => {
+    if ((userRole === 'admin' || userRole === 'superadmin') && item.status === 'accepted') {
+      const hasAiService = aiServicedNews.some(news => news._id === item._id);
+      return (
+        <Button
+          size="small"
+          variant="outlined"
+          color="secondary"
+          onClick={() => handleGenerateAiService(item._id)}
+          disabled={hasAiService || loadingAiService}
+          sx={{ ml: 1 }}
+        >
+          {loadingAiService ? 'Generating...' : hasAiService ? 'AI Service Generated' : 'Generate AI Service'}
+        </Button>
+      );
+    }
+    return null;
+  };
+
+  if (loading) {
     return (
-      <Button
-        size="small"
-        variant="outlined"
-        color="secondary"
-        onClick={() => handleGenerateAiService(item._id)}
-        disabled={hasAiService || loadingAiService}
-        sx={{ ml: 1 }}
-      >
-        {loadingAiService ? 'Generating...' : hasAiService ? 'AI Service Generated' : 'Generate AI Service'}
-      </Button>
+      <Box sx={{ 
+        height: '100vh',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}>
+        <CircularProgress />
+      </Box>
     );
   }
-  return null;
-};
-
-if (loading) {
-  return (
-    <Box sx={{ 
-      height: '100vh',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center'
-    }}>
-      <CircularProgress />
-    </Box>
-  );
-}
 
   return (
     <Box sx={{ 
       height: '100vh',
       p: 3,
-      // backgroundColor: '#f5f5f5',
       display: 'flex',
       flexDirection: 'column'
     }}>
@@ -801,143 +590,177 @@ if (loading) {
       </Box>
 
       <TableContainer component={Paper} elevation={0} sx={{
-       flex: 1, // This will make it take remaining space
-       mt: 2,
-       '& .MuiTableCell-root': {
-         px: 2,
-         py: 1.5
-       }
+        flex: 1,
+        mt: 2,
+        '& .MuiTableCell-root': {
+          px: 2,
+          py: 1.5
+        }
       }}>
         <Table stickyHeader>
-       
-<TableHead>
-  <TableRow>
-    <TableCell>Title</TableCell>
-    <TableCell>Category</TableCell>
-    <TableCell>Reporter</TableCell>
-    <TableCell>Status</TableCell>
-    <TableCell>Submitted Date</TableCell>
-    {(userRole === 'admin' || userRole === 'editor') && (
-      <TableCell align="right">Approve/Reject</TableCell>
-    )}
-    <TableCell align="right">Actions</TableCell>
-  </TableRow>
-</TableHead>
-<TableBody>
-  {filteredContent.length > 0 ? (
-    filteredContent.map((item) => (
-      <TableRow key={item._id}>
-        <TableCell>{item.title}</TableCell>
-        <TableCell>{item.category?.name}</TableCell>
-        <TableCell>
-          <Box>
-            {!item.reportedBy && !item.editedBy ? (
-              <Typography variant="body2" color="primary">
-                AI Service
-              </Typography>
+          <TableHead>
+            <TableRow>
+              <TableCell>Title</TableCell>
+              <TableCell>Category</TableCell>
+              <TableCell>Reporter</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Submitted Date</TableCell>
+              {(userRole === 'admin' || userRole === 'editor') && (
+                <TableCell align="right">Approve/Reject</TableCell>
+              )}
+              <TableCell align="right">Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {paginationLoading ? (
+              <TableRow>
+                <TableCell 
+                  colSpan={userRole === 'admin' || userRole === 'editor' ? 7 : 6} 
+                  align="center" 
+                  sx={{ py: 3 }}
+                >
+                  <CircularProgress size={24} />
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    Loading more articles...
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ) : filteredContent.length > 0 ? (
+              filteredContent.map((item) => (
+                <TableRow key={item._id}>
+                  <TableCell>{item.title}</TableCell>
+                  <TableCell>{item.category?.name}</TableCell>
+                  <TableCell>
+                    <Box>
+                      {!item.reportedBy && !item.editedBy ? (
+                        <Typography variant="body2" color="primary">
+                          AI Service
+                        </Typography>
+                      ) : (
+                        <>
+                          {item.reportedBy && (
+                            <>
+                              <Typography variant="body2">
+                                Reported by: {item.reporterName}
+                              </Typography>
+                              {item.reporterEmail && (
+                                <Typography variant="caption" color="text.secondary">
+                                  {item.reporterEmail}
+                                </Typography>
+                              )}
+                            </>
+                          )}
+                          {item.editedBy && (
+                            <>
+                              <Typography variant="body2" color="primary">
+                                Edited by: {item.editorName}
+                              </Typography>
+                              {item.editorEmail && (
+                                <Typography variant="caption" color="text.secondary">
+                                  {item.editorEmail}
+                                </Typography>
+                              )}
+                            </>
+                          )}
+                        </>
+                      )}
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Chip 
+                      label={item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                      color={getStatusColor(item.status)}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    {new Date(item.createdAt).toLocaleDateString()}
+                  </TableCell>
+                  {(userRole === 'admin' || userRole === 'editor') && (
+                    <TableCell align="right">
+                      {item.status === 'pending' && (
+                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                          {userRole === 'editor' && (
+                            <Button
+                              size="small"
+                              variant="contained"
+                              color="primary"
+                              onClick={() => handleEditClick(item)}
+                            >
+                              Edit
+                            </Button>
+                          )}
+                        </Box>
+                      )}
+                      {item.status === 'verified' && (userRole === 'admin' || userRole === 'superadmin') && (
+                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                          <Button
+                            size="small"
+                            variant="contained"
+                            color="success"
+                            onClick={() => handleVerifyArticle(item._id)}
+                          >
+                            Accept
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="error"
+                            onClick={() => handleRejectArticle(item._id)}
+                          >
+                            Reject
+                          </Button>
+                        </Box>
+                      )}
+                    </TableCell>
+                  )}
+                  <TableCell align="right">
+                    <IconButton 
+                      onClick={(e) => openActionMenu(e, item)}
+                      size="small"
+                    >
+                      <MoreVertical size={18} />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))
             ) : (
-              <>
-                {item.reportedBy && (
-                  <>
-                    <Typography variant="body2">
-                      Reported by: {item.reporterName}
-                    </Typography>
-                    {item.reporterEmail && (
-                      <Typography variant="caption" color="text.secondary">
-                        {item.reporterEmail}
-                      </Typography>
-                    )}
-                  </>
-                )}
-                {item.editedBy && (
-                  <>
-                    <Typography variant="body2" color="primary">
-                      Edited by: {item.editorName}
-                    </Typography>
-                    {item.editorEmail && (
-                      <Typography variant="caption" color="text.secondary">
-                        {item.editorEmail}
-                      </Typography>
-                    )}
-                  </>
-                )}
-              </>
-            )}
-          </Box>
-        </TableCell>
-        <TableCell>
-          <Chip 
-            label={item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-            color={getStatusColor(item.status)}
-            size="small"
-          />
-        </TableCell>
-        <TableCell>
-          {new Date(item.createdAt).toLocaleDateString()}
-        </TableCell>
-        {(userRole === 'admin' || userRole === 'editor') && (
-          <TableCell align="right">
-            {item.status === 'pending' && (
-              <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                {userRole === 'editor' && (
-                  <Button
-                    size="small"
-                    variant="contained"
-                    color="primary"
-                    onClick={() => handleEditClick(item)}
-                  >
-                    Edit
-                  </Button>
-                )}
-              </Box>
-            )}
-            {item.status === 'verified' && (userRole === 'admin' || userRole === 'superadmin') && (
-              <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                <Button
-                  size="small"
-                  variant="contained"
-                  color="success"
-                  onClick={() => handleVerifyArticle(item._id)}
+              <TableRow>
+                <TableCell 
+                  colSpan={userRole === 'admin' || userRole === 'editor' ? 7 : 6} 
+                  align="center" 
+                  sx={{ py: 3 }}
                 >
-                  Accept
-                </Button>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  color="error"
-                  onClick={() => handleRejectArticle(item._id)}
-                >
-                  Reject
-                </Button>
-              </Box>
+                  <Typography variant="body1" color="textSecondary">
+                    No content items found
+                  </Typography>
+                </TableCell>
+              </TableRow>
             )}
-          </TableCell>
-        )}
-        <TableCell align="right">
-          <IconButton 
-            onClick={(e) => openActionMenu(e, item)}
-            size="small"
-          >
-            <MoreVertical size={18} />
-          </IconButton>
-        </TableCell>
-      </TableRow>
-    ))
-  ) : (
-    <TableRow>
-      <TableCell 
-        colSpan={userRole === 'admin' || userRole === 'editor' ? 7 : 6} 
-        align="center" 
-        sx={{ py: 3 }}
-      >
-        <Typography variant="body1" color="textSecondary">
-          No content items found
-        </Typography>
-      </TableCell>
-    </TableRow>
-  )}
-</TableBody>
+          </TableBody>
         </Table>
+        
+        {/* Pagination Component */}
+        <TablePagination
+          component="div"
+          count={totalCount}
+          page={currentPage}
+          onPageChange={handlePageChange}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleRowsPerPageChange}
+          rowsPerPageOptions={[5, 10, 25, 50, 100]}
+          labelRowsPerPage="Articles per page:"
+          labelDisplayedRows={({ from, to, count }) => 
+            `${from}–${to} of ${count !== -1 ? count : `more than ${to}`}`
+          }
+          sx={{
+            borderTop: 1,
+            borderColor: 'divider',
+            '& .MuiTablePagination-toolbar': {
+              px: 2
+            }
+          }}
+        />
       </TableContainer>
 
       {/* Action Menu */}
@@ -1025,218 +848,217 @@ if (loading) {
       </Dialog>
 
       {/* View Dialog */}
-<Dialog
-  open={openViewDialog}
-  onClose={() => setOpenViewDialog(false)}
-  maxWidth="md"
-  fullWidth
->
-  <DialogTitle sx={{ 
-    borderBottom: 1, 
-    borderColor: 'divider',
-    bgcolor: 'primary.main',
-    color: 'white'
-  }}>
-    Article Preview
-  </DialogTitle>
-  <DialogContent dividers sx={{ p: 3 }}>
-    {selectedItem && (
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-          <Chip
-            label={selectedItem.status.charAt(0).toUpperCase() + selectedItem.status.slice(1)}
-            color={getStatusColor(selectedItem.status)}
-            size="small"
-          />
-          <Chip label={selectedItem.category?.name} size="small" />
-        </Box>
+      <Dialog
+        open={openViewDialog}
+        onClose={handleCloseViewDialog}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle sx={{ 
+          borderBottom: 1, 
+          borderColor: 'divider',
+          bgcolor: 'primary.main',
+          color: 'white'
+        }}>
+          Article Preview
+        </DialogTitle>
+        <DialogContent dividers sx={{ p: 3 }}>
+          {selectedItem && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                <Chip
+                  label={selectedItem.status.charAt(0).toUpperCase() + selectedItem.status.slice(1)}
+                  color={getStatusColor(selectedItem.status)}
+                  size="small"
+                />
+                <Chip label={selectedItem.category?.name} size="small" />
+              </Box>
 
-        <Typography variant="h5" gutterBottom>
-          {selectedItem.title}
-        </Typography>
+              <Typography variant="h5" gutterBottom>
+                {selectedItem.title}
+              </Typography>
 
-        <Typography variant="caption" display="block" sx={{ color: 'text.secondary' }}>
-          By {selectedItem.reporterName} ({selectedItem.reporterEmail}) • 
-          Submitted on {new Date(selectedItem.createdAt).toLocaleDateString()}
-          {selectedItem.publishedDate && 
-            ` • Published on ${new Date(selectedItem.publishedDate).toLocaleDateString()}`
-          }
-        </Typography>
+              <Typography variant="caption" display="block" sx={{ color: 'text.secondary' }}>
+                By {selectedItem.reporterName} ({selectedItem.reporterEmail}) • 
+                Submitted on {new Date(selectedItem.createdAt).toLocaleDateString()}
+                {selectedItem.publishedDate && 
+                  ` • Published on ${new Date(selectedItem.publishedDate).toLocaleDateString()}`
+                }
+              </Typography>
 
-        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mt: 2 }}>
-          Summary
-        </Typography>
-        <Typography variant="body1" paragraph>
-          {selectedItem.summary}
-        </Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mt: 2 }}>
+                Summary
+              </Typography>
+              <Typography variant="body1" paragraph>
+                {selectedItem.summary}
+              </Typography>
 
-        <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-          Content
-        </Typography>
-        <Typography variant="body1" paragraph>
-          {selectedItem.content}
-        </Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                Content
+              </Typography>
+              <Typography variant="body1" paragraph>
+                {selectedItem.content}
+              </Typography>
 
-        <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-          Tags
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-          {selectedItem.tags.map((tag, index) => (
-            <Chip key={index} label={tag} size="small" variant="outlined" />
-          ))}
-        </Box>
-      </Box>
-    )}
-  </DialogContent>
-  <DialogActions sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
-    <Button onClick={() => setOpenViewDialog(false)}>
-      Close
-    </Button>
-  </DialogActions>
-</Dialog>
+              <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                Tags
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                {selectedItem.tags?.map((tag, index) => (
+                  <Chip key={index} label={tag} size="small" variant="outlined" />
+                ))}
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
+          <Button onClick={handleCloseViewDialog}>
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
 
-{/* Edit Dialog */}
-<Dialog
-  open={openEditDialog}
-  onClose={() => setOpenEditDialog(false)}
-  maxWidth="md"
-  fullWidth
->
-  <DialogTitle sx={{ 
-    borderBottom: 1, 
-    borderColor: 'divider',
-    bgcolor: 'primary.main',
-    color: 'white'
-  }}>
-    Edit Article
-  </DialogTitle>
-  <DialogContent dividers sx={{ p: 3 }}>
-    {editFormData && (
-      <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        <TextField
-          fullWidth
-          label="Title"
-          value={editFormData.title}
-          onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
-          required
-        />
+      {/* Edit Dialog */}
+      <Dialog
+        open={openEditDialog}
+        onClose={() => setOpenEditDialog(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle sx={{ 
+          borderBottom: 1, 
+          borderColor: 'divider',
+          bgcolor: 'primary.main',
+          color: 'white'
+        }}>
+          Edit Article
+        </DialogTitle>
+        <DialogContent dividers sx={{ p: 3 }}>
+          {editFormData && (
+            <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <TextField
+                fullWidth
+                label="Title"
+                value={editFormData.title}
+                onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                required
+              />
 
-        <TextField
-          fullWidth
-          label="Summary"
-          value={editFormData.summary || ''}
-          onChange={(e) => setEditFormData({ ...editFormData, summary: e.target.value })}
-          multiline
-          rows={3}
-        />
+              <TextField
+                fullWidth
+                label="Summary"
+                value={editFormData.summary || ''}
+                onChange={(e) => setEditFormData({ ...editFormData, summary: e.target.value })}
+                multiline
+                rows={3}
+              />
 
-        <TextField
-          fullWidth
-          label="Content"
-          value={editFormData.content}
-          onChange={(e) => setEditFormData({ ...editFormData, content: e.target.value })}
-          multiline
-          rows={6}
-          required
-        />
+              <TextField
+                fullWidth
+                label="Content"
+                value={editFormData.content}
+                onChange={(e) => setEditFormData({ ...editFormData, content: e.target.value })}
+                multiline
+                rows={6}
+                required
+              />
 
-        <FormControl fullWidth>
-          <InputLabel>Category</InputLabel>
-          <Select
-            value={editFormData.category?._id || ''}
-            onChange={(e) => {
-              const selectedCategory = categories.find(cat => cat._id === e.target.value);
-              setEditFormData({ 
-                ...editFormData, 
-                category: selectedCategory 
-              });
-            }}
-            label="Category"
-            required
-          >
-            {categories.map((category) => (
-              <MenuItem key={category._id} value={category._id}>
-                {category.name}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+              <FormControl fullWidth>
+                <InputLabel>Category</InputLabel>
+                <Select
+                  value={editFormData.category?._id || ''}
+                  onChange={(e) => {
+                    const selectedCategory = categories.find(cat => cat._id === e.target.value);
+                    setEditFormData({ 
+                      ...editFormData, 
+                      category: selectedCategory 
+                    });
+                  }}
+                  label="Category"
+                  required
+                >
+                  {categories.map((category) => (
+                    <MenuItem key={category._id} value={category._id}>
+                      {category.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
-        <FormControl fullWidth>
-          <InputLabel>Language</InputLabel>
-          <Select
-            value={editFormData.language || 'English'}
-            onChange={(e) => setEditFormData({ ...editFormData, language: e.target.value })}
-            label="Language"
-            required
-          >
-            <MenuItem value="English">English</MenuItem>
-            <MenuItem value="Hindi">Hindi</MenuItem>
-            <MenuItem value="Bengali">Bengali</MenuItem>
-            <MenuItem value="Tamil">Tamil</MenuItem>
-            <MenuItem value="Telugu">Telugu</MenuItem>
-            <MenuItem value="Marathi">Marathi</MenuItem>
-            <MenuItem value="Gujarati">Gujarati</MenuItem>
-            <MenuItem value="Kannada">Kannada</MenuItem>
-            <MenuItem value="Malayalam">Malayalam</MenuItem>
-            <MenuItem value="Punjabi">Punjabi</MenuItem>
-            <MenuItem value="Assamese">Assamese</MenuItem>
-            <MenuItem value="Bhojpuri">Bhojpuri</MenuItem>
-            <MenuItem value="Konkani">Konkani</MenuItem>
-            <MenuItem value="Maithili">Maithili</MenuItem>
-            <MenuItem value="Manipuri">Manipuri</MenuItem>
-            <MenuItem value="Odia">Odia</MenuItem>
-            <MenuItem value="Sanskrit">Sanskrit</MenuItem>
-            <MenuItem value="Sindhi">Sindhi</MenuItem>
-            <MenuItem value="Urdu">Urdu</MenuItem>
-          </Select>
-        </FormControl>
+              <FormControl fullWidth>
+                <InputLabel>Language</InputLabel>
+                <Select
+                  value={editFormData.language || 'English'}
+                  onChange={(e) => setEditFormData({ ...editFormData, language: e.target.value })}
+                  label="Language"
+                  required
+                >
+                  <MenuItem value="English">English</MenuItem>
+                  <MenuItem value="Hindi">Hindi</MenuItem>
+                  <MenuItem value="Bengali">Bengali</MenuItem>
+                  <MenuItem value="Tamil">Tamil</MenuItem>
+                  <MenuItem value="Telugu">Telugu</MenuItem>
+                  <MenuItem value="Marathi">Marathi</MenuItem>
+                  <MenuItem value="Gujarati">Gujarati</MenuItem>
+                  <MenuItem value="Kannada">Kannada</MenuItem>
+                  <MenuItem value="Malayalam">Malayalam</MenuItem>
+                  <MenuItem value="Punjabi">Punjabi</MenuItem>
+                  <MenuItem value="Assamese">Assamese</MenuItem>
+                  <MenuItem value="Bhojpuri">Bhojpuri</MenuItem>
+                  <MenuItem value="Konkani">Konkani</MenuItem>
+                  <MenuItem value="Maithili">Maithili</MenuItem>
+                  <MenuItem value="Manipuri">Manipuri</MenuItem>
+                  <MenuItem value="Odia">Odia</MenuItem>
+                  <MenuItem value="Sanskrit">Sanskrit</MenuItem>
+                  <MenuItem value="Sindhi">Sindhi</MenuItem>
+                  <MenuItem value="Urdu">Urdu</MenuItem>
+                </Select>
+              </FormControl>
 
-        <FormControl fullWidth>
-          <InputLabel>Fake News Status</InputLabel>
-          <Select
-            value={editFormData.isFake?.toString() || 'false'}
-            onChange={(e) => setEditFormData({ ...editFormData, isFake: e.target.value === 'true' })}
-            label="Fake News Status"
-            required
-          >
-            <MenuItem value="false">Not Fake</MenuItem>
-            <MenuItem value="true">Fake</MenuItem>
-          </Select>
-        </FormControl>
+              <FormControl fullWidth>
+                <InputLabel>Fake News Status</InputLabel>
+                <Select
+                  value={editFormData.isFake?.toString() || 'false'}
+                  onChange={(e) => setEditFormData({ ...editFormData, isFake: e.target.value === 'true' })}
+                  label="Fake News Status"
+                  required
+                >
+                  <MenuItem value="false">Not Fake</MenuItem>
+                  <MenuItem value="true">Fake</MenuItem>
+                </Select>
+              </FormControl>
 
-        <TextField
-          fullWidth
-          label="Location"
-          value={editFormData.location || ''}
-          onChange={(e) => setEditFormData({ ...editFormData, location: e.target.value })}
-        />
+              <TextField
+                fullWidth
+                label="Location"
+                value={editFormData.location || ''}
+                onChange={(e) => setEditFormData({ ...editFormData, location: e.target.value })}
+              />
 
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-          {editFormData.tags?.map((tag, index) => (
-            <Chip
-              key={index}
-              label={tag}
-              onDelete={() => {
-                const newTags = editFormData.tags.filter((_, i) => i !== index);
-                setEditFormData({ ...editFormData, tags: newTags });
-              }}
-            />
-          ))}
-        </Box>
-      </Box>
-    )}
-  </DialogContent>
-  <DialogActions sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
-    <Button onClick={() => setOpenEditDialog(false)}>
-      Cancel
-    </Button>
-    <Button onClick={handleEditSubmit} variant="contained" color="primary">
-      Save Changes
-    </Button>
-  </DialogActions>
-</Dialog>
-
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                {editFormData.tags?.map((tag, index) => (
+                  <Chip
+                    key={index}
+                    label={tag}
+                    onDelete={() => {
+                      const newTags = editFormData.tags.filter((_, i) => i !== index);
+                      setEditFormData({ ...editFormData, tags: newTags });
+                    }}
+                  />
+                ))}
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
+          <Button onClick={() => setOpenEditDialog(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleEditSubmit} variant="contained" color="primary">
+            Save Changes
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

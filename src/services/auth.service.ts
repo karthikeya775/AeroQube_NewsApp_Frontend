@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:3000/user-service/api/v0/user',
+  baseURL: 'http://13.200.122.192:5000/user-service/api/v0/user',
   headers: {
     'Content-Type': 'application/json'
   }
@@ -40,6 +40,12 @@ api.interceptors.response.use(
       data: error.response?.data,
       headers: error.response?.headers
     });
+    if (error.response?.status === 401) {
+      // Token expired or invalid, clear localStorage and redirect to login
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/rolebasedlogin';
+    }
     return Promise.reject(error);
   }
 );
@@ -86,12 +92,13 @@ interface IReporter {
 }
 
 class AuthService {
-  private baseUrl = 'http://localhost:3000/user-service/api/v0/user';
+  private baseUrl = 'http://13.200.122.192:5000/user-service/api/v0/user';
 
   async register(userData: RegisterUserData) {
     console.log('Registering user:', userData);
     try {
       const response = await api.post('/register', userData);
+      console.log("Resp",response.data);
       return response.data;
     } catch (error: any) {
       if (error.response?.data) {
@@ -244,6 +251,45 @@ class AuthService {
     } catch (error: any) {
       console.error('Delete reporter error:', error);
       throw error.response?.data || error;
+    }
+  }
+
+  // Register Admin
+  async registerAdmin(userData: RegisterUserData) {
+    try {
+      const response = await api.post('/add-admin', userData);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw error.response.data;
+      }
+      throw error;
+    }
+  }
+
+  // Register Editor
+  async registerEditor(userData: RegisterUserData) {
+    try {
+      const response = await api.post('/add-editor', userData);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw error.response.data;
+      }
+      throw error;
+    }
+  }
+
+  // Register SuperAdmin
+  async registerSuperAdmin(userData: RegisterUserData) {
+    try {
+      const response = await api.post('/add-superadmin', userData);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw error.response.data;
+      }
+      throw error;
     }
   }
 }

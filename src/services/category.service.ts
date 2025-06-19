@@ -11,7 +11,21 @@ export interface ICategory {
 }
 
 class CategoryService {
-  private baseUrl = `http://localhost:3000/news-service/api/v0/category`;
+  private baseUrl = `http://13.200.122.192:5000/news-service/api/v0/category`;
+
+  // Create new category
+  async createCategory(categoryData: { name: string; parent?: string }) {
+    try {
+      const response = await axios.post(`${this.baseUrl}/create`, categoryData, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
 
   // Get all parent categories
   async getParentCategories() {

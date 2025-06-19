@@ -7,6 +7,11 @@ import {
   CircularProgress,
   Button,
   Chip,
+  Pagination,
+  Select,
+  MenuItem,
+  FormControl as MuiFormControl,
+  InputLabel,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useSearch } from "../../contexts/SearchContext";
@@ -14,6 +19,7 @@ import { useLanguage } from "../../contexts/LanguageContext";
 import { toast } from "sonner";
 import { viewService } from "../../services/view.service";
 import NewsCard from '../../Components/User/NewsCard';
+import categoriesData from '../../constants/newsapp-news.categories.json';
 
 // Language enum to full name mapping
 const LANGUAGE_MAP = {
@@ -52,6 +58,12 @@ const NEWS_IMAGE_MAPPING = {
   '65f2e8b7c261e6001234abd6': 'https://images.unsplash.com/photo-1495020689067-958852a7765e?q=80&w=1000',
 };
 
+// Build a mapping from category ID to name
+const CATEGORY_ID_NAME_MAP = {};
+categoriesData.forEach(cat => {
+  CATEGORY_ID_NAME_MAP[cat._id.$oid] = cat.name;
+});
+
 const AllNews = ({ onPlayAudio, currentPlayingNews }) => {
   const navigate = useNavigate();
   const { language } = useLanguage();
@@ -61,19 +73,24 @@ const AllNews = ({ onPlayAudio, currentPlayingNews }) => {
   const [loading, setLoading] = useState(true);
   const [selectedTags, setSelectedTags] = useState([]);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
 
-  const fetchNews = async () => {
+  const fetchNews = async (page = 0, limit = rowsPerPage) => {
     try {
       setLoading(true);
       setError(null);
-      const response = await viewService.getAllNews();
+      const response = await viewService.getAllNews(limit, page + 1);
+      console.log("response",response);
       
-      if (response.success) {
+      if (response.success && response.data && Array.isArray(response.data.data)) {
+        setTotalCount(response.data.totalCounts || response.data.data.length || 0);
         // Log all article IDs to see what we're working with
-        console.log('All article IDs:', response.data.map(item => item._id));
+        console.log('All article IDs:', response.data.data.map(item => item._id));
         
         // Transform the news data to match our frontend structure
-        const transformedNews = response.data.map(item => {
+        const transformedNews = response.data.data.map(item => {
           // Find the translation for the selected language using full language name
           const translation = item.translatedServices?.find(
             service => service.languageCode.toLowerCase() === LANGUAGE_MAP[language].toLowerCase()
@@ -87,12 +104,19 @@ const AllNews = ({ onPlayAudio, currentPlayingNews }) => {
           // Use hardcoded image if available, otherwise use the original image or placeholder
           const imageUrl = NEWS_IMAGE_MAPPING[item._id] || item.imageURLs?.[0] || 'https://via.placeholder.com/300x200';
 
+          // Map category ID to name using the mapping
+          let categoryName = 'Uncategorized';
+          if (item.category && (typeof item.category === 'string' || item.category?._id)) {
+            const catId = typeof item.category === 'string' ? item.category : item.category._id || item.category.$oid;
+            categoryName = CATEGORY_ID_NAME_MAP[catId] || 'Uncategorized';
+          }
+
           return {
             id: item._id,
             title: translation?.title || item.title,
             content: translation?.translatedContent || item.content,
             summary: item.summary || '',
-            category: item.category?.name || 'Uncategorized',
+            category: categoryName,
             date: item.createdAt,
             imageUrl: imageUrl,
             voice_file: translation?.audioURL || null,
@@ -126,9 +150,9 @@ const AllNews = ({ onPlayAudio, currentPlayingNews }) => {
   };
 
   useEffect(() => {
-    fetchNews();
+    fetchNews(currentPage, rowsPerPage);
     // eslint-disable-next-line
-  }, [language]);
+  }, [language, currentPage, rowsPerPage]);
 
   const handleNewsClick = (newsId) => {
     const newsItem = newsItems.find(item => item.id === newsId);
@@ -158,6 +182,15 @@ const AllNews = ({ onPlayAudio, currentPlayingNews }) => {
 
     return matchesSearch && matchesTags;
   });
+
+  const handlePageChange = (event, newPage) => {
+    setCurrentPage(newPage);
+  };
+
+  const handleRowsPerPageChange = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setCurrentPage(0);
+  };
 
   if (loading) {
     return (
@@ -215,6 +248,42 @@ const AllNews = ({ onPlayAudio, currentPlayingNews }) => {
           </Grid>
         ))}
       </Grid>
+
+      {/* Pagination Controls */}
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        mt: 4,
+        flexWrap: 'wrap',
+        gap: 2
+      }}>
+        <MuiFormControl size="small" sx={{ minWidth: 120 }}>
+          <InputLabel id="rows-per-page-label">Rows per page</InputLabel>
+          <Select
+            labelId="rows-per-page-label"
+            value={rowsPerPage}
+            label="Rows per page"
+            onChange={handleRowsPerPageChange}
+          >
+            {[5, 10, 25, 50, 100].map(opt => (
+              <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+            ))}
+          </Select>
+        </MuiFormControl>
+
+        <Pagination
+          count={Math.ceil(totalCount / rowsPerPage) || 1}
+          page={currentPage + 1}
+          onChange={(e, value) => setCurrentPage(value - 1)}
+          color="primary"
+          shape="rounded"
+          showFirstButton
+          showLastButton
+          siblingCount={1}
+          boundaryCount={1}
+        />
+      </Box>
     </Container>
   );
 };

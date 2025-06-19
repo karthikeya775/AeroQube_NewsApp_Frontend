@@ -28,6 +28,7 @@ const RoleBasedLogin = () => {
     email: '',
     password: ''
   });
+  const [formError, setFormError] = useState('');
 
   const handleChange = (e) => {
     setFormData({
@@ -38,14 +39,21 @@ const RoleBasedLogin = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setFormError(''); // Clear previous error
     try {
-      console.log('Form Data:', formData);
       const response = await authService.login(formData);
-      console.log('Login Response:', response);
 
-      // Check if response has the expected structure
+      // Check for error in response
       if (!response || !response.data) {
-        toast.error('Invalid response from server');
+        const msg = 'Invalid response from server';
+        setFormError(msg);
+        toast.error(msg);
+        return;
+      }
+      if (response.success === false || response.status === 'error') {
+        const msg = response.message || 'Login failed. Please check your credentials.';
+        setFormError(msg);
+        toast.error(msg);
         return;
       }
 
@@ -58,12 +66,16 @@ const RoleBasedLogin = () => {
       localStorage.setItem('userRole', user.role);
 
       if (user.role !== role) {
-        toast.error(`Invalid role. You are not authorized as ${role}`);
+        const msg = `Invalid role. You are not authorized as ${role}`;
+        setFormError(msg);
+        toast.error(msg);
         return;
       }
 
       if (!user.isVerified) {
-        toast.error('Please verify your email first');
+        const msg = 'Please verify your email first';
+        setFormError(msg);
+        toast.error(msg);
         return;
       }
 
@@ -83,15 +95,19 @@ const RoleBasedLogin = () => {
         case 'admin':
           navigate('/admin/dashboard', { replace: true });
           break;
+        case 'superadmin':
+          navigate('/superadmin-portal', { replace: true });
+          break;
         default:
           navigate('/', { replace: true });
       }
     } catch (error) {
-      console.error('Login error:', error);
-      toast.error(
-        error.response?.data?.message || 
-        'Login failed. Please check your credentials.'
-      );
+      const errorMsg =
+        error?.response?.data?.message ||
+        error?.message ||
+        'Login failed. Please check your credentials.';
+      setFormError(errorMsg);
+      toast.error(errorMsg);
     }
   };
 
@@ -127,6 +143,11 @@ const RoleBasedLogin = () => {
 
           <form onSubmit={handleSubmit}>
             <Stack spacing={2}>
+              {formError && (
+                <Typography color="error" sx={{ mb: 1, textAlign: 'center' }}>
+                  {formError}
+                </Typography>
+              )}
               <TextField
                 fullWidth
                 label="Email Address"
@@ -158,6 +179,17 @@ const RoleBasedLogin = () => {
                   ),
                 }}
               />
+
+              <Box textAlign="right" sx={{ mt: 1 }}>
+                <Button
+                  variant="text"
+                  size="small"
+                  onClick={() => navigate('/forgot-password')}
+                  sx={{ textTransform: 'none', color: 'primary.main' }}
+                >
+                  Forgot Password?
+                </Button>
+              </Box>
 
               <Button
                 fullWidth

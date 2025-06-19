@@ -33,10 +33,10 @@ export interface INews {
 }
 
 class ViewService {
-  private baseUrl = `http://localhost:3000/news-service/api/v0/view`;
+  private baseUrl = ` http://13.200.122.192:5000/news-service/api/v0/view`;
 
   // Get all news with language support
-  async getAllNews() {
+  async getAllNews(limit = 10, offset = 1) {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -44,11 +44,13 @@ class ViewService {
       }
 
       const response = await axios.get(`${this.baseUrl}/all`, {
+        params: { limit, offset },
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
+      console.log("response data", response.data)
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -69,7 +71,7 @@ class ViewService {
     }
   }
 
-  async getUserFeed() {
+  async getUserFeed(limit = 10, offset = 1) {
     try {
       const token = localStorage.getItem('token');
       const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -83,6 +85,7 @@ class ViewService {
       }
   
       const response = await axios.get(`${this.baseUrl}/feed`, {
+        params: { limit, offset },
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

@@ -25,6 +25,7 @@ import EmailVerification from './Components/Auth/EmailVerification';
 import EditorPortal from './Components/Editor/EditorPortal';
 import AllNews from './Pages/User/AllNews.jsx';
 import CategoryNews from './Pages/User/CategoryNews.jsx'
+import SuperAdminPortal from './Pages/SuperAdminPortal';
 
 // ProtectedRoute component
 const ProtectedRoute = ({ children, allowedRole }) => {
@@ -293,6 +294,16 @@ function App() {
             }
           />
         </Route>
+
+        {/* Protected Super Admin Route */}
+        <Route
+          path="/superadmin-portal"
+          element={
+            <ProtectedRoute allowedRole="superadmin">
+              <SuperAdminPortal />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </Router>
   );

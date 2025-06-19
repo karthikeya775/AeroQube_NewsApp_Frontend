@@ -78,9 +78,9 @@ const CategoryPage = ({ onPlayAudio, currentPlayingNews }) => {
         setError(null);
         const response = await viewService.getNewsByCategory(category);
         
-        if (response.success) {
+        if (response.success && response.data && Array.isArray(response.data.data)) {
           // Transform the news data to match our frontend structure
-          const transformedNews = response.data.map(item => {
+          const transformedNews = response.data.data.map(item => {
             // Find the translation for the selected language using full language name
             const translation = item.translatedServices?.find(
               service => service.languageCode.toLowerCase() === LANGUAGE_MAP[language].toLowerCase()

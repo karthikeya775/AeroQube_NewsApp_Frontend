@@ -219,6 +219,9 @@ const [editFormData, setEditFormData] = useState({
   image: '',
   imageCaption: ''
 });
+const [currentPage, setCurrentPage] = useState(0);
+const [rowsPerPage, setRowsPerPage] = useState(10);
+const [totalCount, setTotalCount] = useState(0);
 
 useEffect(() => {
     const fetchReporterNews = async () => {
@@ -238,13 +241,22 @@ useEffect(() => {
         const reporterId = userProfileResponse.data._id;
         console.log("Fetching news for reporter:", reporterId);
 
-        // Use the getNewsByReporter endpoint
-        const newsResponse = await newsService.getNewsByReporter(reporterId);
+        // Use the getNewsByReporter endpoint with pagination
+        const newsResponse = await newsService.getNewsByReporter(reporterId, { limit: rowsPerPage, offset: currentPage * rowsPerPage + 1 });
+  
         console.log("News response:", newsResponse);
-        
+        let newsArr = [];
         if (newsResponse.success) {
+          if (Array.isArray(newsResponse.data?.data)) {
+            newsArr = newsResponse.data.data;
+          } else if (Array.isArray(newsResponse.data)) {
+            newsArr = newsResponse.data;
+          } else {
+            newsArr = [];
+          }
+          setTotalCount(newsResponse.total || newsArr.length);
           // Transform the news data to match our frontend structure
-          const transformedNews = newsResponse.data.map(item => ({
+          const transformedNews = newsArr.map(item => ({
             _id: item._id,
             title: item.title,
             headline: item.title,
@@ -261,13 +273,19 @@ useEffect(() => {
             isFake: item.isFake || false,
             feedback: item.feedback || ''
           }));
-          
           setArticles(transformedNews);
         } else {
           setError(newsResponse.message || 'Failed to fetch articles.');
           toast.error(newsResponse.message || 'Failed to fetch articles.');
         }
       } catch (err) {
+        if (err && err.success && Array.isArray(err.data)) {
+          // This is a handled empty result, not a real error
+          setArticles([]);
+          setTotalCount(0);
+          setLoading(false);
+          return;
+        }
         console.error('Error fetching reporter news:', err);
         setError('An error occurred while fetching articles.');
         toast.error('An error occurred while fetching articles.');
@@ -277,7 +295,7 @@ useEffect(() => {
     };
 
     fetchReporterNews();
-  }, []);
+  }, [currentPage, rowsPerPage]);
   
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);

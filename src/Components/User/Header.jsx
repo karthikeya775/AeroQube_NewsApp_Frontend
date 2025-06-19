@@ -131,7 +131,7 @@ const Header = () => {
     <header className="header-container">
       <div className="top-header">
         <Link to="/user/dashboard" style={{ textDecoration: 'none' }}>
-          <h1 className="site-title">NewsApp</h1>
+          <h1 className="site-title">Aero NewsApp</h1>
         </Link>
         <div className="top-header-right">
           <form className="search-bar" onSubmit={handleSearch}>

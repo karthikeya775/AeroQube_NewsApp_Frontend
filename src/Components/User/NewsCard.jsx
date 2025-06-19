@@ -13,7 +13,6 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { categoryService } from '../../services/category.service';
 
 
 const categoryColors = {
@@ -30,31 +29,8 @@ const categoryColors = {
 const NewsCard = ({ news, onPlayAudio, currentPlayingNews, onReadMore }) => {
   const navigate = useNavigate();
   const { language } = useLanguage();
-  const [categoryName, setCategoryName] = useState('Loading...');
-  const [categoryId, setCategoryId] = useState(null);
-
-  useEffect(() => {
-    const fetchCategoryName = async () => {
-      try {
-        if (news?.category?._id) {
-          setCategoryId(news.category._id);
-          const response = await categoryService.getCategoryById(news.category._id);
-          if (response.success && response.data) {
-            setCategoryName(response.data.name);
-          } else {
-            setCategoryName('Category Not Found');
-          }
-        } else {
-          setCategoryName('No Category');
-        }
-      } catch (error) {
-        console.error('Error fetching category:', error);
-        setCategoryName('Error Loading Category');
-      }
-    };
-
-    fetchCategoryName();
-  }, [news?.category?._id]);
+  const categoryName = news.category || 'No Category';
+  const categoryId = news.categoryId || (news.category?._id ? news.category._id : null);
 
   const {
     id,

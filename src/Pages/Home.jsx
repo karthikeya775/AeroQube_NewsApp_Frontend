@@ -9,7 +9,7 @@ import {
   Grid,
   useTheme
 } from '@mui/material';
-import { Users, UserCog, PenSquare, UserPlus, Edit } from 'lucide-react';
+import { Users, UserCog, PenSquare, UserPlus, Edit, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const HomePage = () => {
@@ -62,7 +62,16 @@ const HomePage = () => {
       color: '#F59E42',
       gradient: 'linear-gradient(135deg, #F59E42 0%, #FACC15 100%)',
       bgColor: 'rgba(245,158,66,0.07)'
-    }
+    },
+    {
+      title: 'Super Admin',
+      description: 'Register and manage Admins, Editors, and Super Admins',
+      icon: <Shield size={44} />,
+      role: 'superadmin',
+      color: '#F43F5E',
+      gradient: 'linear-gradient(135deg, #F43F5E 0%, #BE185D 100%)',
+      bgColor: 'rgba(244,63,94,0.07)'
+    },
   ];
 
   const handleRoleSelect = (role, customPath) => {
@@ -97,7 +106,7 @@ const HomePage = () => {
               textShadow: '0 2px 16px rgba(59,130,246,0.08)'
             }}
           >
-            📰 Welcome to NewsPortal
+            🌀 Welcome to Aero NewsApp
           </Typography>
           <Typography
             variant="h6"
@@ -122,8 +131,7 @@ const HomePage = () => {
             <Grid item xs={12} sm={6} md={4} lg={3} key={role.title}>
               <Card
                 sx={{
-                  minWidth: 240,
-                  maxWidth: 320,
+                  width: 270,
                   minHeight: 320,
                   mx: 'auto',
                   display: 'flex',
@@ -220,6 +228,15 @@ const HomePage = () => {
             </Grid>
           ))}
         </Grid>
+
+        {/* <Button
+          variant="contained"
+          color="secondary"
+          onClick={() => navigate('/login?role=superadmin')}
+          sx={{ mt: 2 }}
+        >
+          Super Admin Login
+        </Button> */}
 
         <Box sx={{ textAlign: 'center', mt: 7 }}>
           <Typography

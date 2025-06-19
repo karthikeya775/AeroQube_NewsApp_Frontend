@@ -54,58 +54,49 @@ export interface ICategory {
 }
 
 class NewsService {
-  private baseUrl = `http://localhost:3000/news-service/api/v0/news`;
-  private maxRetries = 3;
-  private retryDelay = 2000; // 2 seconds
+  private baseUrl = `http://13.200.122.192:5000/news-service/api/v0/news`;
+private maxRetries = 3;
+private retryDelay = 2000; // 2 seconds
 
-  // Get all news with retry logic
-  async getAllNews() {
-    let retries = 0;
-    
-    while (retries < this.maxRetries) {
-      try {
-        const response = await axios.get(`${this.baseUrl}/all`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-          timeout: 30000, // Increased timeout to 30 seconds
-          validateStatus: function (status) {
-            return status >= 200 && status < 500; // Accept all responses except 500s
-          }
-        });
-
-        if (response.status === 200) {
-          return response.data;
-        } else {
-          throw new Error(`Server returned status ${response.status}`);
-        }
-      } catch (error) {
-        retries++;
-        
-        if (retries === this.maxRetries) {
-          throw this.handleError(error);
-        }
-        
-        // Wait before retrying
-        await new Promise(resolve => setTimeout(resolve, this.retryDelay * retries));
-        console.log(`Retrying request (${retries}/${this.maxRetries})...`);
-      }
-    }
-  }
-
-  // Get news by ID
-  async getNewsById(id: string) {
+// Get all news with pagination support and retry logic
+async getAllNews(params: { limit?: number; offset?: number; [key: string]: any } = {}) {
+  const { limit = 100, offset = 10, ...rest } = params;
+  let retries = 0;
+  
+  while (retries < this.maxRetries) {
     try {
-      const response = await axios.get(`${this.baseUrl}/${id}`, {
+      const response = await axios.get(`${this.baseUrl}/all`, {
+        params: { limit, offset, ...rest },
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        timeout: 30000, // Increased timeout to 30 seconds
+        validateStatus: function (status) {
+          return status >= 200 && status < 500; // Accept all responses except 500s
         }
       });
-      return response.data;
+      
+      console.log("response", response.data);
+      
+      if (response.status === 200) {
+        return response.data;
+      } else {
+        throw new Error(`Server returned status ${response.status}`);
+      }
     } catch (error) {
-      throw this.handleError(error);
+      retries++;
+      
+      if (retries === this.maxRetries) {
+        throw this.handleError(error);
+      }
+      
+      // Wait before retrying
+      await new Promise(resolve => setTimeout(resolve, this.retryDelay * retries));
+      console.log(`Retrying request (${retries}/${this.maxRetries})...`);
     }
   }
+}
+
 
   // Create news
   async createNews(newsData: Partial<INews>) {
@@ -266,11 +257,17 @@ class NewsService {
     }
   }
 
-  // Get news by status
-  async getNewsByStatus(status: 'pending' | 'verified' | 'accepted' | 'published' | 'rejected') {
+  // Get news by status with pagination
+  async getNewsByStatus(options: {
+    status?: 'pending' | 'verified' | 'accepted' | 'published' | 'rejected',
+    limit?: number,
+    offset?: number
+  } = {}) {
     try {
+      // offset=0 means first page
+      const { status, limit = 10, offset = 0 } = options;
       const response = await axios.get(`${this.baseUrl}/by-status`, {
-        params: { status },
+        params: { status, limit, offset },
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -281,15 +278,19 @@ class NewsService {
     }
   }
 
-  // Get news by reporter
-  async getNewsByReporter(reporterId: string) {
+  // Get news by reporter with optional pagination
+  async getNewsByReporter(reporterId: string, options: { limit?: number, offset?: number } = {}) {
     try {
+      const params: any = {};
+      if (options.limit !== undefined) params.limit = options.limit;
+      if (options.offset !== undefined) params.offset = options.offset;
       const response = await axios.get(`${this.baseUrl}/reporter/${reporterId}`, {
+        params,
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      console.log("response",response.data);
+      console.log("response", response.data);
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -339,6 +340,14 @@ class NewsService {
       if (error.response.status === 500) {
         throw new Error('Server error: Database connection issue. Please try again later.');
       } else if (error.response.status === 404) {
+        // Special handling for reporter not found
+        if (
+          error.response.data &&
+          error.response.data.message &&
+          error.response.data.message.toLowerCase().includes('no news found for this reporter')
+        ) {
+          return { success: true, data: [], total: 0 };
+        }
         throw new Error('Resource not found');
       } else if (error.response.status === 401) {
         throw new Error('Unauthorized: Please login again');

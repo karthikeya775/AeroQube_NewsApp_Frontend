@@ -67,6 +67,9 @@ const PendingArticles = () => {
     isFake: false
   });
   const [categories, setCategories] = useState([]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -80,35 +83,38 @@ const PendingArticles = () => {
           toast.error('Failed to fetch categories');
         }
 
-        // Fetch pending articles
-        const response = await newsService.getNewsByStatus('pending');
+        // Fetch pending articles with pagination
+        const response = await newsService.getNewsByStatus({ status: 'pending', limit: rowsPerPage, offset: currentPage * rowsPerPage });
+        console.log("response",response);
 
-        if (response.success && Array.isArray(response.data)) {
-          const pendingArticles = response.data.filter(article => !article.editedBy);
-          setArticles(pendingArticles);
+        if (response.success) {
+          let articlesArr = [];
+          if (Array.isArray(response.data?.data)) {
+            articlesArr = response.data.data;
+          } else if (Array.isArray(response.data)) {
+            articlesArr = response.data;
+          } else {
+            articlesArr = [];
+          }
+          setTotalCount(response.total || articlesArr.length);
+          setArticles(articlesArr);
 
-          const uniqueReporterIds = [...new Set(pendingArticles.map(article => article.reportedBy).filter(id => id))];
-          console.log("unique reporters",uniqueReporterIds);
-
+          const uniqueReporterIds = [...new Set(articlesArr.map(article => article.reportedBy).filter(id => id))];
           const names = {};
           await Promise.all(uniqueReporterIds.map(async (reporterId) => {
             try {
               const userResponse = await authService.getUserProfileById(reporterId);
-              console.log("userrepsonse",userResponse);
-
               if (userResponse.success && userResponse.data?.name) {
                 names[reporterId] = userResponse.data.name;
               } else {
-                 names[reporterId] = 'Unknown Reporter';
+                names[reporterId] = 'Unknown Reporter';
               }
             } catch (userError) {
               console.error(`Error fetching reporter details for ID ${reporterId}:`, userError);
               names[reporterId] = 'Unknown Reporter';
             }
           }));
-
           setReporterNames(names);
-
         } else {
           toast.error(response.message || 'Failed to fetch pending articles');
           setArticles([]);
@@ -121,9 +127,9 @@ const PendingArticles = () => {
         setLoading(false);
       }
     };
-
     fetchData();
-  }, []);
+    // eslint-disable-next-line
+  }, [currentPage, rowsPerPage]);
 
   const handleSearch = (event) => {
     setSearchTerm(event.target.value);
@@ -220,6 +226,15 @@ const PendingArticles = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+  };
+
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value - 1);
+  };
+
+  const handleRowsPerPageChange = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setCurrentPage(0);
   };
 
   const filteredArticles = articles.filter(article =>
@@ -368,6 +383,29 @@ const PendingArticles = () => {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Pagination Controls */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 3, flexWrap: 'wrap', gap: 2 }}>
+        <Box>
+          <Typography variant="body2" sx={{ mr: 1, alignSelf: 'center', display: 'inline' }}>Rows per page:</Typography>
+          <select value={rowsPerPage} onChange={handleRowsPerPageChange}>
+            {[5, 10, 25, 50, 100].map(opt => (
+              <option key={opt} value={opt}>{opt}</option>
+            ))}
+          </select>
+        </Box>
+        <Box>
+          <Button onClick={() => handlePageChange(null, Math.max(currentPage, 1))} disabled={currentPage === 0}>
+            Previous
+          </Button>
+          <Typography sx={{ mx: 2, alignSelf: 'center', display: 'inline' }}>
+            Page {currentPage + 1} of {Math.ceil(totalCount / rowsPerPage) || 1}
+          </Typography>
+          <Button onClick={() => handlePageChange(null, currentPage + 2)} disabled={(currentPage + 1) * rowsPerPage >= totalCount}>
+            Next
+          </Button>
+        </Box>
+      </Box>
 
       {/* Preview Dialog */}
       <Dialog

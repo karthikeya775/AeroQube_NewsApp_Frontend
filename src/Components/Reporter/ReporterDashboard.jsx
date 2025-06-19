@@ -35,6 +35,9 @@ const ReporterDashboard = () => {
   const [articles, setArticles] = useState([]); // State to hold fetched articles
   const [loading, setLoading] = useState(true); // Add loading state
   const [error, setError] = useState(null); // Add error state
+  const [currentPage, setCurrentPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
 
  const [articleStats, setArticleStats] = useState({
     total: 0,
@@ -65,16 +68,24 @@ const ReporterDashboard = () => {
         const reporterId = userProfileResponse.data._id; // Use the user ID from the profile
         console.log("reporterId",reporterId);
 
-        const newsResponse = await newsService.getNewsByReporter(reporterId); // Call backend API
+        const newsResponse = await newsService.getNewsByReporter(reporterId, { limit: rowsPerPage, offset: currentPage * rowsPerPage + 1 });
         console.log("newsResponse",newsResponse);
 
+        let submissions = [];
         if (newsResponse.success) {
-          const submissions = newsResponse.data;
+          if (Array.isArray(newsResponse.data?.data)) {
+            submissions = newsResponse.data.data;
+          } else if (Array.isArray(newsResponse.data)) {
+            submissions = newsResponse.data;
+          } else {
+            submissions = [];
+          }
+          setTotalCount(newsResponse.total || submissions.length);
           setArticles(submissions); // Update articles state with fetched data
 
           // Calculate stats based on fetched data
           const stats = {
-            total: submissions.length,
+            total: newsResponse.total || submissions.length,
             published: submissions.filter(article => article.status === 'published').length,
             pending: submissions.filter(article => article.status === 'pending').length,
             rejected: submissions.filter(article => article.status === 'rejected').length
@@ -116,7 +127,16 @@ const ReporterDashboard = () => {
 
     fetchReporterNews();
 
-  }, []); // Empty dependency array to fetch once on mount
+  }, [currentPage, rowsPerPage]); // Refetch on page/rows change
+
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value - 1);
+  };
+
+  const handleRowsPerPageChange = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setCurrentPage(0);
+  };
 
   // Calculate performance metrics based on fetched data
   const calculatePerformanceMetrics = () => {
@@ -189,6 +209,7 @@ const ReporterDashboard = () => {
       {error && <Typography color="error">Error: {error}</Typography>}
 
       {!loading && !error && (
+        <>
         <Grid container spacing={3}>
           {/* Stats cards */}
           <Grid item xs={12} sm={6} md={3} width= { {xs:'100%', md:'250px' ,lg:'250px'}}>
@@ -446,6 +467,7 @@ const ReporterDashboard = () => {
             </Card>
           </Grid> */}
         </Grid>
+        </>
       )}
     </Box>
   );

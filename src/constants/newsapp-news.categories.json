@@ -1,0 +1,474 @@
+[{
+  "_id": {
+    "$oid": "684a60684b112a1955189f9f"
+  },
+  "name": "Politics",
+  "parent": null,
+  "createdAt": {
+    "$date": "2025-06-12T05:06:48.192Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a60904b112a1955189fa2"
+  },
+  "name": "Elections",
+  "parent": {
+    "$oid": "684a60684b112a1955189f9f"
+  },
+  "createdAt": {
+    "$date": "2025-06-12T05:07:28.741Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a60a04b112a1955189fa5"
+  },
+  "name": "Policies",
+  "parent": {
+    "$oid": "684a60684b112a1955189f9f"
+  },
+  "createdAt": {
+    "$date": "2025-06-12T05:07:44.927Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a60af4b112a1955189fa8"
+  },
+  "name": "Diplomacy",
+  "parent": {
+    "$oid": "684a60684b112a1955189f9f"
+  },
+  "createdAt": {
+    "$date": "2025-06-12T05:07:59.314Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a60be4b112a1955189fab"
+  },
+  "name": "Local Politics",
+  "parent": {
+    "$oid": "684a60684b112a1955189f9f"
+  },
+  "createdAt": {
+    "$date": "2025-06-12T05:08:14.641Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a60cd4b112a1955189fae"
+  },
+  "name": "Business",
+  "parent": null,
+  "createdAt": {
+    "$date": "2025-06-12T05:08:29.314Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a60da4b112a1955189fb1"
+  },
+  "name": "Markets",
+  "parent": {
+    "$oid": "684a60cd4b112a1955189fae"
+  },
+  "createdAt": {
+    "$date": "2025-06-12T05:08:42.066Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a60e74b112a1955189fb4"
+  },
+  "name": "Economy",
+  "parent": {
+    "$oid": "684a60cd4b112a1955189fae"
+  },
+  "createdAt": {
+    "$date": "2025-06-12T05:08:55.665Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a60f74b112a1955189fb7"
+  },
+  "name": "Companies",
+  "parent": {
+    "$oid": "684a60cd4b112a1955189fae"
+  },
+  "createdAt": {
+    "$date": "2025-06-12T05:09:11.286Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a61094b112a1955189fba"
+  },
+  "name": "Startups",
+  "parent": {
+    "$oid": "684a60cd4b112a1955189fae"
+  },
+  "createdAt": {
+    "$date": "2025-06-12T05:09:29.709Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a61184b112a1955189fbd"
+  },
+  "name": "Sports",
+  "parent": null,
+  "createdAt": {
+    "$date": "2025-06-12T05:09:44.463Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a61264b112a1955189fc0"
+  },
+  "name": "Cricket",
+  "parent": {
+    "$oid": "684a61184b112a1955189fbd"
+  },
+  "createdAt": {
+    "$date": "2025-06-12T05:09:58.855Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a61344b112a1955189fc3"
+  },
+  "name": "Football",
+  "parent": {
+    "$oid": "684a61184b112a1955189fbd"
+  },
+  "createdAt": {
+    "$date": "2025-06-12T05:10:12.419Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a61444b112a1955189fc6"
+  },
+  "name": "Other Sports",
+  "parent": {
+    "$oid": "684a61184b112a1955189fbd"
+  },
+  "createdAt": {
+    "$date": "2025-06-12T05:10:28.199Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a61b74b112a1955189fc9"
+  },
+  "name": "Entertainment",
+  "parent": null,
+  "createdAt": {
+    "$date": "2025-06-12T05:12:23.357Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a61c54b112a1955189fcc"
+  },
+  "name": "Bollywood",
+  "parent": {
+    "$oid": "684a61b74b112a1955189fc9"
+  },
+  "createdAt": {
+    "$date": "2025-06-12T05:12:37.259Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a61d54b112a1955189fcf"
+  },
+  "name": "Television",
+  "parent": {
+    "$oid": "684a61b74b112a1955189fc9"
+  },
+  "createdAt": {
+    "$date": "2025-06-12T05:12:53.883Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a61e54b112a1955189fd2"
+  },
+  "name": "Regional Cinema",
+  "parent": {
+    "$oid": "684a61b74b112a1955189fc9"
+  },
+  "createdAt": {
+    "$date": "2025-06-12T05:13:09.005Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a61fd4b112a1955189fd5"
+  },
+  "name": "Hollywood",
+  "parent": {
+    "$oid": "684a61b74b112a1955189fc9"
+  },
+  "createdAt": {
+    "$date": "2025-06-12T05:13:33.789Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a620b4b112a1955189fd8"
+  },
+  "name": "Technology",
+  "parent": null,
+  "createdAt": {
+    "$date": "2025-06-12T05:13:47.870Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a62194b112a1955189fdb"
+  },
+  "name": "Gadgets",
+  "parent": {
+    "$oid": "684a620b4b112a1955189fd8"
+  },
+  "createdAt": {
+    "$date": "2025-06-12T05:14:01.408Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a62284b112a1955189fde"
+  },
+  "name": "Internet",
+  "parent": {
+    "$oid": "684a620b4b112a1955189fd8"
+  },
+  "createdAt": {
+    "$date": "2025-06-12T05:14:16.660Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a623b4b112a1955189fe1"
+  },
+  "name": "Ai / Science",
+  "parent": {
+    "$oid": "684a620b4b112a1955189fd8"
+  },
+  "createdAt": {
+    "$date": "2025-06-12T05:14:35.491Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a62504b112a1955189fe5"
+  },
+  "name": "Health",
+  "parent": null,
+  "createdAt": {
+    "$date": "2025-06-12T05:14:56.805Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a62764b112a1955189fea"
+  },
+  "name": "Medical",
+  "parent": {
+    "$oid": "684a62504b112a1955189fe5"
+  },
+  "createdAt": {
+    "$date": "2025-06-12T05:15:34.486Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a62834b112a1955189fed"
+  },
+  "name": "Wellness",
+  "parent": {
+    "$oid": "684a62504b112a1955189fe5"
+  },
+  "createdAt": {
+    "$date": "2025-06-12T05:15:47.249Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a62924b112a1955189ff0"
+  },
+  "name": "World",
+  "parent": null,
+  "createdAt": {
+    "$date": "2025-06-12T05:16:02.369Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a629d4b112a1955189ff3"
+  },
+  "name": "Asia",
+  "parent": {
+    "$oid": "684a62924b112a1955189ff0"
+  },
+  "createdAt": {
+    "$date": "2025-06-12T05:16:13.038Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a62ad4b112a1955189ff6"
+  },
+  "name": "Americas",
+  "parent": {
+    "$oid": "684a62924b112a1955189ff0"
+  },
+  "createdAt": {
+    "$date": "2025-06-12T05:16:29.554Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a62bc4b112a1955189ff9"
+  },
+  "name": "Europe",
+  "parent": {
+    "$oid": "684a62924b112a1955189ff0"
+  },
+  "createdAt": {
+    "$date": "2025-06-12T05:16:44.337Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a62d24b112a1955189ffc"
+  },
+  "name": "Middle East",
+  "parent": {
+    "$oid": "684a62924b112a1955189ff0"
+  },
+  "createdAt": {
+    "$date": "2025-06-12T05:17:06.303Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a62e04b112a1955189fff"
+  },
+  "name": "National",
+  "parent": null,
+  "createdAt": {
+    "$date": "2025-06-12T05:17:20.876Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a62f34b112a195518a002"
+  },
+  "name": "Lifestyle",
+  "parent": null,
+  "createdAt": {
+    "$date": "2025-06-12T05:17:39.582Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a62ff4b112a195518a005"
+  },
+  "name": "Travel",
+  "parent": {
+    "$oid": "684a62f34b112a195518a002"
+  },
+  "createdAt": {
+    "$date": "2025-06-12T05:17:51.760Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a63104b112a195518a008"
+  },
+  "name": "Food",
+  "parent": {
+    "$oid": "684a62f34b112a195518a002"
+  },
+  "createdAt": {
+    "$date": "2025-06-12T05:18:08.314Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a63204b112a195518a00b"
+  },
+  "name": "Culture",
+  "parent": {
+    "$oid": "684a62f34b112a195518a002"
+  },
+  "createdAt": {
+    "$date": "2025-06-12T05:18:24.223Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a63324b112a195518a00e"
+  },
+  "name": "Fashion",
+  "parent": {
+    "$oid": "684a62f34b112a195518a002"
+  },
+  "createdAt": {
+    "$date": "2025-06-12T05:18:42.746Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "684a63454b112a195518a011"
+  },
+  "name": "Miscellaneous",
+  "parent": null,
+  "createdAt": {
+    "$date": "2025-06-12T05:19:01.463Z"
+  },
+  "__v": 0
+}]

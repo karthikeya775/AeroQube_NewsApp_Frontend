@@ -81,19 +81,21 @@ const EditHistory = () => {
   const fetchEditedArticles = async () => {
     try {
       setLoading(true);
-      // Fetch only verified articles
-      const response = await newsService.getNewsByStatus('verified');
-      
+      const response = await newsService.getNewsByStatus({ status: 'verified', limit: 1000, offset: 0 });
       if (response.success) {
-        console.log("allArticles", response.data);
-        console.log("Editor ID:", editorId);
-        
+        let articlesArr = [];
+        if (Array.isArray(response.data?.data)) {
+          articlesArr = response.data.data;
+        } else if (Array.isArray(response.data)) {
+          articlesArr = response.data;
+        } else {
+          articlesArr = [];
+        }
         // Filter articles that have been edited by this editor
-        const editedArticles = response.data.filter(article => {
+        const editedArticles = articlesArr.filter(article => {
           console.log("Article:", article.title, "editedBy:", article.editedBy);
           return article.editedBy && article.editedBy === editorId;
         });
-        
         setArticles(editedArticles);
       } else {
         toast.error('Failed to fetch edited articles');

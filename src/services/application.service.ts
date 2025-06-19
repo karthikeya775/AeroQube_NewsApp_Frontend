@@ -2,7 +2,7 @@ import axios, { InternalAxiosRequestConfig } from 'axios';
 
 // Create axios instance with correct base URL
 const api = axios.create({
-  baseURL: 'http://localhost:3000/user-service/api/v0/application',
+  baseURL: 'http://13.200.122.192:5000/user-service/api/v0/application',
   headers: {
     'Content-Type': 'multipart/form-data'
   }

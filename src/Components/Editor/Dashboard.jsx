@@ -82,6 +82,7 @@ const Dashboard = ({ currentSection, setCurrentSection }) => {
     if (editorId) {
       fetchDashboardData();
     }
+    // eslint-disable-next-line
   }, [editorId]);
 
   const fetchDashboardData = async () => {
@@ -97,49 +98,53 @@ const Dashboard = ({ currentSection, setCurrentSection }) => {
       const currentEditorId = editorResponse.data._id;
       
       // Fetch pending articles
-      const pendingResponse = await newsService.getNewsByStatus('pending');
+      const pendingResponse = await newsService.getNewsByStatus({ status: 'pending', limit: 100, offset: 0 });
+      console.log("pending articles: ", pendingResponse);
       // Fetch verified articles
-      const verifiedResponse = await newsService.getNewsByStatus('verified');
+      const verifiedResponse = await newsService.getNewsByStatus({ status: 'verified', limit: 1000, offset: 0 });
       // Fetch accepted articles
-      const acceptedResponse = await newsService.getNewsByStatus('accepted');
+      const acceptedResponse = await newsService.getNewsByStatus({ status: 'accepted', limit: 1000, offset: 0 });
       // Fetch published articles
-      const publishedResponse = await newsService.getNewsByStatus('published');
+      const publishedResponse = await newsService.getNewsByStatus({ status: 'published', limit: 1000, offset: 0 });
       
-      if (pendingResponse.success && verifiedResponse.success && acceptedResponse.success && publishedResponse.success) {
-        const pendingArticles = pendingResponse.data || [];
-        const verifiedArticles = verifiedResponse.data || [];
-        const acceptedArticles = acceptedResponse.data || [];
-        const publishedArticles = publishedResponse.data || [];
+      // Robustly extract news arrays from paginated or non-paginated responses
+      const pendingArticles = Array.isArray(pendingResponse.data?.data)
+        ? pendingResponse.data.data
+        : pendingResponse.data || [];
+      const verifiedArticles = Array.isArray(verifiedResponse.data?.data)
+        ? verifiedResponse.data.data
+        : verifiedResponse.data || [];
+      const acceptedArticles = Array.isArray(acceptedResponse.data?.data)
+        ? acceptedResponse.data.data
+        : acceptedResponse.data || [];
+      const publishedArticles = Array.isArray(publishedResponse.data?.data)
+        ? publishedResponse.data.data
+        : publishedResponse.data || [];
 
-        // Calculate dashboard stats
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+      // Calculate dashboard stats
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
 
-        const stats = {
-          // Count only articles that are pending and not yet edited
-          pendingArticles: pendingArticles.filter(article => !article.editedBy).length,
-          // Count verified articles edited today by this editor
-          editedToday: verifiedArticles.filter(article => 
-            article.editedBy === currentEditorId && new Date(article.updatedAt) >= today
-          ).length,
-          // Count accepted articles that were verified by this editor
-          approvedToday: acceptedArticles.filter(article => 
-            article.editedBy === currentEditorId && new Date(article.updatedAt) >= today
-          ).length,
-          // Count total verified articles edited by this editor
-          totalEdited: verifiedArticles.filter(article => article.editedBy === currentEditorId).length
-        };
+      const stats = {
+        // Count only articles that are pending and not yet edited
+        pendingArticles: pendingArticles.filter(article => !article.editedBy).length,
+        // Count verified articles edited today by this editor
+        editedToday: verifiedArticles.filter(article => 
+          article.editedBy === currentEditorId && new Date(article.updatedAt) >= today
+        ).length,
+        // Count accepted articles that were verified by this editor
+        approvedToday: acceptedArticles.filter(article => 
+          article.editedBy === currentEditorId && new Date(article.updatedAt) >= today
+        ).length,
+        // Count total verified articles edited by this editor
+        totalEdited: verifiedArticles.filter(article => article.editedBy === currentEditorId).length
+      };
 
-        // Get recent articles sorted by creation time
-        const recent = [...pendingArticles, ...verifiedArticles, ...acceptedArticles, ...publishedArticles]
-          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-          .slice(0, 5);
-
-        setDashboardStats(stats);
-        setRecentArticles(recent);
-      } else {
-        toast.error('Failed to fetch dashboard data');
-      }
+      // Get recent articles sorted by creation time
+      const allArticles = [...pendingArticles, ...verifiedArticles, ...acceptedArticles, ...publishedArticles]
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setDashboardStats(stats);
+      setRecentArticles(allArticles.slice(0, 5));
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       toast.error('An error occurred while fetching dashboard data');

@@ -18,9 +18,11 @@ const CategoryNews = () => {
     try {
       setLoading(true);
       const response = await newsService.getNewsByCategory(categoryId);
-      if (response.success) {
+      console.log("response",response)
+      if (response.success && response.data && Array.isArray(response.data.data)) {
         // The response data structure from the news service
-        const newsData = response.data[0]?.news || [];
+        console.log("response",response)
+        const newsData = response.data.data;
         setNews(newsData);
         
         // If we have news items, get the category name from the first item

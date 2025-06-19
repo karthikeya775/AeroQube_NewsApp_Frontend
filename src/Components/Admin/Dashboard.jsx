@@ -40,6 +40,8 @@ const Dashboard = ({ userRole, setCurrentSection }) => {
   const [recentApplications, setRecentApplications] = useState([]);
   const [recentArticles, setRecentArticles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [applicationsError, setApplicationsError] = useState("");
+  const [articlesError, setArticlesError] = useState("");
 
   const publishedArticlesCount = 12; // Example value
   const rejectedArticlesCount = 3;   // Example value
@@ -48,18 +50,38 @@ const Dashboard = ({ userRole, setCurrentSection }) => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
+        setApplicationsError("");
+        setArticlesError("");
         
         // Fetch reporters
         const reportersResponse = await authService.getReporters();
         const reporters = reportersResponse.data;
         
         // Fetch applications
-        const applicationsResponse = await applicationService.getAllApplications();
-        const applications = applicationsResponse.data;
+        let applications = [];
+        try {
+          const applicationsResponse = await applicationService.getAllApplications();
+          applications = applicationsResponse.data;
+        } catch (err) {
+          if (err.statusCode === 404 && err.message === "No applications found for this user") {
+            applications = [];
+            setApplicationsError("No applications found for this user.");
+            toast.error("No applications found for this user.");
+          } else {
+            setApplicationsError(err.message || "Failed to load applications.");
+            toast.error(err.message || "Failed to load applications.");
+          }
+        }
         
-        // Fetch news articles
-        const newsResponse = await newsService.getAllNews();
-        const articles = newsResponse.data;
+        // Fetch news articles (with limit and offset for recent articles)
+        let articlesData = [];
+        try {
+          const newsResponse = await newsService.getAllNews({ limit: 5, offset: 1 });
+          articlesData = newsResponse.data && Array.isArray(newsResponse.data.data) ? newsResponse.data.data : [];
+        } catch (err) {
+          setArticlesError(err.message || "Failed to load articles.");
+          toast.error(err.message || "Failed to load articles.");
+        }
 
         // Sort and get latest 3 applications
         const latestApplications = applications
@@ -76,8 +98,8 @@ const Dashboard = ({ userRole, setCurrentSection }) => {
           }));
         setRecentApplications(latestApplications);
 
-        // Get recent articles (last 5)
-        const recentArticles = articles
+        // Get recent articles (last 5, already limited by API)
+        const recentArticles = articlesData
           .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
           .slice(0, 5)
           .map(article => ({
@@ -89,23 +111,23 @@ const Dashboard = ({ userRole, setCurrentSection }) => {
           }));
         setRecentArticles(recentArticles);
 
-        // Calculate stats
-        const pendingApps = applications.filter(app => app.status === 'pending').length;
-        const totalReporters = reporters.length;
-        const publishedArticles = articles.filter(article => article.status === 'published').length;
-        const rejectedArticles = articles.filter(article => article.status === 'rejected').length;
+        // Calculate stats (fetch all articles for stats)
+        const allNewsResponse = await newsService.getAllNews({ limit: 10000, offset: 1 });
+        const allArticles = allNewsResponse.data && Array.isArray(allNewsResponse.data.data) ? allNewsResponse.data.data : [];
+        const publishedArticles = allArticles.filter(article => article.status === 'published').length;
+        const rejectedArticles = allArticles.filter(article => article.status === 'rejected').length;
 
         // Set dashboard stats
         setDashboardStats({
-          totalReporters,
-          pendingApplications: pendingApps,
+          totalReporters: reporters.length,
+          pendingApplications: applications.filter(app => app.status === 'pending').length,
           publishedArticles,
           rejectedArticles
         });
 
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
-        toast.error('Failed to load dashboard data');
+        toast.error(error.message || 'Failed to load dashboard data');
       } finally {
         setLoading(false);
       }
@@ -293,7 +315,13 @@ const Dashboard = ({ userRole, setCurrentSection }) => {
               }}
             >
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 2, sm: 2.5 } }}>
-                {recentApplications.length > 0 ? (
+                {applicationsError ? (
+                  <Box sx={{ textAlign: 'center', py: { xs: 3, sm: 4 }, color: 'error.main' }}>
+                    <Typography variant="body2" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+                      {applicationsError}
+                    </Typography>
+                  </Box>
+                ) : recentApplications.length > 0 ? (
                   recentApplications.map((application) => (
                     <Paper
                       key={application.id}
@@ -495,7 +523,13 @@ const Dashboard = ({ userRole, setCurrentSection }) => {
               }}
             >
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 2, sm: 2.5 } }}>
-                {recentArticles.length > 0 ? (
+                {articlesError ? (
+                  <Box sx={{ textAlign: 'center', py: { xs: 3, sm: 4 }, color: 'error.main' }}>
+                    <Typography variant="body2" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+                      {articlesError}
+                    </Typography>
+                  </Box>
+                ) : recentArticles.length > 0 ? (
                   recentArticles.map((article) => (
                     <Paper
                       key={article.id}
