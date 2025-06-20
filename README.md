@@ -33,23 +33,58 @@ npm install
 ```bash
 npm run dev
 ```
-
 The app will be available at [http://localhost:5173](http://localhost:5173) by default.
-```
+
 
 ## Project Structure
 
 ```
 frontend/
   src/
-    Components/    # Reusable UI components (cards, dashboards, etc.)
-    Pages/         # Top-level pages (Home, Dashboards, etc.)
-    services/      # API service modules
-    contexts/      # React context providers (auth, language, search)
-    assets/        # Static assets (images, icons)
-    Styles/        # Custom CSS
-    config.ts      # App-wide config
-  public/          # Static public files
-  index.html       # Main HTML entry
-  package.json     # Project metadata and scripts
+    Components/
+      Admin/         # Admin dashboard, sidebar, user/content/category management
+      Editor/        # Editor dashboard, pending articles, edit history, navigation
+      Reporter/      # Reporter dashboard, submissions, article form, sidebar, settings
+      User/          # User-facing components: news card, profile, audio player, header/footer, search, language selector
+      Auth/          # User registration and email verification
+      ReporterApplications.jsx
+    Pages/
+      Home.jsx
+      SuperAdminPortal.jsx
+      RoleBasedLogin.jsx
+      Admin/
+        AdminPanel.jsx
+        ReporterReg.jsx
+      Editor/
+        (Editor-specific pages if any)
+      Reporter/
+        ReporterPanel.jsx
+        ReporterApplicationDashboard.jsx
+        ReporterApplicationLogin.jsx
+        ReporterRegistration.jsx
+      User/
+        UserDashboard.jsx
+        AllNews.jsx
+        CategoryPage.jsx
+        CategoryNews.jsx
+        ContentManagement.jsx
+        NewsDetail.jsx
+        Login.jsx
+    services/         # API service modules (auth, news, view, category, application)
+    constants/        # Shared data (newsapp-news.categories.json)
+    contexts/         # React context providers (SearchContext, LanguageContext)
+    assets/           # Static assets (e.g., react.svg)
+    Images/           # News category images
+    Styles/           # Custom CSS (Header.css, Footer.css, CategoryPage.css, LoginPage.css)
+    config.ts         # App-wide config
+    App.jsx           # Main app component
+    main.jsx          # App entry point
+    index.css         # Global styles
+    App.css           # App-specific styles
+    DummyNews.jsx     # (Large dummy data/component)
+  public/             # Static public files (vite.svg, etc.)
+  index.html          # Main HTML entry
+  package.json        # Project metadata and scripts
 ```
+
+

@@ -2,7 +2,7 @@ import axios, { InternalAxiosRequestConfig } from 'axios';
 
 // Create axios instance with correct base URL
 const api = axios.create({
-  baseURL: 'http://13.200.122.192:5000/user-service/api/v0/application',
+  baseURL: 'https://aeroqube-news-service.onrender.com/user-service/api/v0/application',
   headers: {
     'Content-Type': 'multipart/form-data'
   }
