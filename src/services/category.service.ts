@@ -11,7 +11,7 @@ export interface ICategory {
 }
 
 class CategoryService {
-  private baseUrl = `https://aeroqube-news-service.onrender.com/news-service/api/v0/category`;
+  private baseUrl = `http://13.200.122.192:5000/news-service/api/v0/category`;
 
   // Create new category
   async createCategory(categoryData: { name: string; parent?: string }) {

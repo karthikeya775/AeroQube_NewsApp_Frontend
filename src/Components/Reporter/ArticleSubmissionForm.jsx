@@ -285,7 +285,7 @@ useEffect(() => {
     setCategoriesError('');
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('https://aeroqube-news-service.onrender.com/news-service/api/v0/category/all', {
+      const response = await axios.get(' http://13.200.122.192:5000/news-service/api/v0/category/all', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCategories(response.data.data || []);
