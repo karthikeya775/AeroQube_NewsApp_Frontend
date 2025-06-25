@@ -183,10 +183,6 @@ const AllNews = ({ onPlayAudio, currentPlayingNews }) => {
     return matchesSearch && matchesTags;
   });
 
-  const handlePageChange = (event, newPage) => {
-    setCurrentPage(newPage);
-  };
-
   const handleRowsPerPageChange = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setCurrentPage(0);
@@ -236,7 +232,7 @@ const AllNews = ({ onPlayAudio, currentPlayingNews }) => {
       )}
 
       {/* News Grid */}
-      <Grid container spacing={3}>
+      <Grid container spacing={3} sx={{ justifyContent: 'center' }}>
         {filteredNews.map((news) => (
           <Grid item xs={12} sm={6} md={4} key={news.id}>
             <NewsCard 

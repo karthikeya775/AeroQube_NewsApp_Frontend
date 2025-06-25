@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 
 import AudioPlayer from './Components/User/AudioPlayer';
@@ -274,26 +274,24 @@ function App() {
         />
 
         {/* Reporter Application Routes */}
-        <Route path="/reporter-application">
-          <Route index element={<ReporterApplicationLogin />} />
-          <Route path="register" element={<ReporterRegistration />} />
-          <Route
-            path="dashboard"
-            element={
-              <ProtectedRoute allowedRole="user">
-                <ReporterApplicationDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="apply"
-            element={
-              <ProtectedRoute allowedRole="user">
-                <ReporterReg />
-              </ProtectedRoute>
-            }
-          />
-        </Route>
+        <Route path="/reporter-application" element={<ReporterApplicationLogin />} />
+        <Route path="/reporter-application/register" element={<ReporterRegistration />} />
+        <Route
+          path="/reporter-application/dashboard"
+          element={
+            <ProtectedRoute allowedRole="user">
+              <ReporterApplicationDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reporter-application/apply"
+          element={
+            <ProtectedRoute allowedRole="user">
+              <ReporterReg />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Protected Super Admin Route */}
         <Route

@@ -139,6 +139,8 @@ class AuthService {
       // Clear localStorage
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      localStorage.removeItem('isAuthenticated');
+      localStorage.removeItem('userRole');
 
       return response.data;
     } catch (error: any) {
@@ -290,6 +292,28 @@ class AuthService {
         throw error.response.data;
       }
       throw error;
+    }
+  }
+
+  // Forgot password
+  async forgotPassword(email: string) {
+    try {
+      const response = await api.post('/forgot-password', { email });
+      return response.data;
+    } catch (error: any) {
+      console.error('Forgot password error:', error);
+      throw error.response?.data || error;
+    }
+  }
+
+  // Set new password (after receiving reset link)
+  async setPassword(token: string, password: string) {
+    try {
+      const response = await api.put(`/setpassword?token=${token}`, { password });
+      return response.data;
+    } catch (error: any) {
+      console.error('Set password error:', error);
+      throw error.response?.data || error;
     }
   }
 }

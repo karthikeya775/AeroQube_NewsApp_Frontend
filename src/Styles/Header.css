@@ -259,7 +259,7 @@
 
 .news-ticker p {
   display: inline-block;
-  animation: ticker 20s linear infinite;
+  animation: ticker 30s linear infinite;
   margin: 0;
 }
 

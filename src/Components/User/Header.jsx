@@ -7,6 +7,7 @@ import LanguageSelector from '../User/LanguageSelector.jsx';
 import { toast } from 'sonner';
 import { authService } from '../../services/auth.service';
 import { categoryService } from '../../services/category.service';
+import { viewService } from '../../services/view.service';
 
 const Header = () => {
   const [isNavOpen, setIsNavOpen] = useState(false);
@@ -20,6 +21,7 @@ const Header = () => {
   const navigate = useNavigate();
   const profileMenuRef = useRef(null);
   const categoryRef = useRef(null);
+  const [breakingNewsArticles, setBreakingNewsArticles] = useState([]);
   
   const userData = JSON.parse(localStorage.getItem('user') || '{}');
   const userEmail = userData?.email || '';
@@ -27,6 +29,7 @@ const Header = () => {
 
   useEffect(() => {
     fetchCategories();
+    fetchBreakingNews();
   }, []);
 
   const fetchCategories = async () => {
@@ -44,6 +47,17 @@ const Header = () => {
       toast.error('Failed to fetch categories');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchBreakingNews = async () => {
+    try {
+      const response = await viewService.getAllNews(3, 1); // limit 3, page 1
+      if (response.success && response.data && Array.isArray(response.data.data)) {
+        setBreakingNewsArticles(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching breaking news:', error);
     }
   };
 
@@ -178,7 +192,7 @@ const Header = () => {
                       <FaUser className="menu-icon" />
                       <span>My Profile</span>
                     </div>
-                    <div className="profile-menu-item" onClick={() => navigate('/user/bookmarks')}>
+                    {/* <div className="profile-menu-item" onClick={() => navigate('/user/bookmarks')}>
                       <FaBookmark className="menu-icon" />
                       <span>Saved Articles</span>
                     </div>
@@ -189,7 +203,7 @@ const Header = () => {
                     <div className="profile-menu-item" onClick={() => navigate('/user/settings')}>
                       <FaCog className="menu-icon" />
                       <span>Settings</span>
-                    </div>
+                    </div> */}
                   </div>
                   
                   <div className="profile-divider"></div>
@@ -270,7 +284,20 @@ const Header = () => {
       <div className="breaking-news">
         <span className="breaking-label">BREAKING NEWS:</span>
         <div className="news-ticker">
-          <p>{breakingNews}</p>
+          <p>
+            {breakingNewsArticles.length > 0
+              ? breakingNewsArticles.map((article, idx) => (
+                  <span key={article._id}>
+                    {article.title}
+                    {idx < breakingNewsArticles.length - 1 && (
+                      <span style={{ margin: '0 18px', color: '#fff', fontWeight: 'bold', fontSize: '1.5em', verticalAlign: 'middle' }}>
+                        &bull;
+                      </span>
+                    )}
+                  </span>
+                ))
+              : breakingNews}
+          </p>
         </div>
       </div>
     </header>

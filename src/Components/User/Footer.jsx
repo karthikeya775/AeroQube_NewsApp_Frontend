@@ -17,7 +17,7 @@ const Footer = () => {
     <footer className="footer">
       <div className="footer-container">
         <div className="footer-section">
-          <h2 className="footer-title">NewsApp</h2>
+          <h2 className="footer-title">Aero NewsApp</h2>
           <p className="footer-description">
             Your trusted source for breaking news, in-depth analysis, and diverse perspectives.
           </p>
@@ -26,11 +26,11 @@ const Footer = () => {
         <div className="footer-section">
           <h3 className="footer-heading">Categories</h3>
           <ul className="footer-links">
-            <li><a href="/category/politics">Politics</a></li>
-            <li><a href="/category/business">Business</a></li>
-            <li><a href="/category/technology">Technology</a></li>
-            <li><a href="/category/entertainment">Entertainment</a></li>
-            <li><a href="/category/sports">Sports</a></li>
+            <li><a href="/#/user/category/684a60684b112a1955189f9f">Politics</a></li>
+            <li><a href="/#/user/category/684a60cd4b112a1955189fae">Business</a></li>
+            <li><a href="/#/user/category/684a620b4b112a1955189fd8">Technology</a></li>
+            <li><a href="/#/user/category/684a61b74b112a1955189fc9">Entertainment</a></li>
+            <li><a href="/#/user/category/684a61184b112a1955189fbd">Sports</a></li>
           </ul>
         </div>
 
@@ -62,7 +62,7 @@ const Footer = () => {
       </div>
       
       <div className="footer-bottom">
-        <p>© {currentYear} NewsApp. All rights reserved.</p>
+        <p>© {currentYear} AeroNewsApp. All rights reserved.</p>
       </div>
     </footer>
   );

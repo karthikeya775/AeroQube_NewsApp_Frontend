@@ -58,9 +58,10 @@ class ViewService {
   }
 
   // Get news by category
-  async getNewsByCategory(categoryId: string) {
+  async getNewsByCategory(categoryId: string, limit = 10, offset = 1) {
     try {
       const response = await axios.get(`${this.baseUrl}/category/${categoryId}`, {
+        params: { limit, offset },
         headers: {
           'Content-Type': 'application/json'
         }

@@ -69,6 +69,34 @@ class CategoryService {
     }
   }
 
+  // Update category
+  async updateCategory(categoryId: string, categoryData: { name: string; parent?: string }) {
+    try {
+      const response = await axios.put(`${this.baseUrl}/${categoryId}`, categoryData, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  // Delete category
+  async deleteCategory(categoryId: string) {
+    try {
+      const response = await axios.delete(`${this.baseUrl}/${categoryId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
   // Error handler
   private handleError(error: any) {
     if (error.response) {

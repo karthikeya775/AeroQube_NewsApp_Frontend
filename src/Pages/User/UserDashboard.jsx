@@ -7,6 +7,11 @@ import {
   CircularProgress,
   Button,
   Chip,
+  Pagination,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSearch } from "../../contexts/SearchContext";
@@ -214,10 +219,6 @@ const UserDashboard = ({ onPlayAudio, currentPlayingNews }) => {
     return matchesSearch && matchesCategory && matchesTags;
   });
 
-  const handlePageChange = (event, newPage) => {
-    setCurrentPage(newPage);
-  };
-
   const handleRowsPerPageChange = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setCurrentPage(0);
@@ -267,7 +268,7 @@ const UserDashboard = ({ onPlayAudio, currentPlayingNews }) => {
       )}
 
       {/* News Grid */}
-      <Grid container spacing={3}>
+      <Grid container spacing={3} sx={{ justifyContent: 'center' }}>
         {filteredNews.map((news) => (
           <Grid item xs={12} sm={6} md={4} key={news.id}>
             <NewsCard 
@@ -281,24 +282,39 @@ const UserDashboard = ({ onPlayAudio, currentPlayingNews }) => {
       </Grid>
 
       {/* Pagination Controls */}
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
-        <Button onClick={() => handlePageChange(null, Math.max(currentPage - 1, 0))} disabled={currentPage === 0}>
-          Previous
-        </Button>
-        <Typography sx={{ mx: 2, alignSelf: 'center' }}>
-          Page {currentPage + 1} of {Math.ceil(totalCount / rowsPerPage) || 1}
-        </Typography>
-        <Button onClick={() => handlePageChange(null, currentPage + 1)} disabled={(currentPage + 1) * rowsPerPage >= totalCount}>
-          Next
-        </Button>
-      </Box>
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
-        <Typography variant="body2" sx={{ mr: 1, alignSelf: 'center' }}>Rows per page:</Typography>
-        <select value={rowsPerPage} onChange={handleRowsPerPageChange}>
-          {[5, 10, 25, 50, 100].map(opt => (
-            <option key={opt} value={opt}>{opt}</option>
-          ))}
-        </select>
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        mt: 4,
+        flexWrap: 'wrap',
+        gap: 2
+      }}>
+        <FormControl size="small" sx={{ minWidth: 120 }}>
+          <InputLabel id="rows-per-page-label">Rows per page</InputLabel>
+          <Select
+            labelId="rows-per-page-label"
+            value={rowsPerPage}
+            label="Rows per page"
+            onChange={handleRowsPerPageChange}
+          >
+            {[5, 10, 25, 50, 100].map(opt => (
+              <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        <Pagination
+          count={Math.ceil(totalCount / rowsPerPage) || 1}
+          page={currentPage + 1}
+          onChange={(e, value) => setCurrentPage(value - 1)}
+          color="primary"
+          shape="rounded"
+          showFirstButton
+          showLastButton
+          siblingCount={1}
+          boundaryCount={1}
+        />
       </Box>
     </Container>
   );

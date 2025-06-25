@@ -14,7 +14,7 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { authService } from '../../services/auth.service';
 
 const ReporterApplicationLogin = () => {
@@ -166,6 +166,16 @@ const ReporterApplicationLogin = () => {
                 Create Account
               </Button>
             </Box>
+
+            <Button
+              startIcon={<ArrowLeft />}
+              onClick={() => navigate('/')}
+              sx={{ mt: 3, color: 'text.secondary' }}
+              fullWidth={false}
+              disabled={loading}
+            >
+              Back to Home
+            </Button>
           </CardContent>
         </Card>
       </Box>
