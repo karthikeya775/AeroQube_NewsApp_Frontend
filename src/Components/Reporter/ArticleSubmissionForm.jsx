@@ -20,7 +20,8 @@ import {
   Alert,
   useTheme,
   useMediaQuery,
-  CircularProgress
+  CircularProgress,
+  Snackbar
 } from '@mui/material';
 import {
   Image,
@@ -35,7 +36,6 @@ import {
   List,
   Link
 } from 'lucide-react';
-import { toast } from "sonner";
 import { newsService } from '../../services/news.service';
 import axios from 'axios';
 
@@ -66,6 +66,13 @@ const ArticleSubmissionForm = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Alert states
+  const [alert, setAlert] = useState({
+    open: false,
+    message: '',
+    severity: 'success' // 'success', 'error', 'warning', 'info'
+  });
   
   const [formData, setFormData] = useState({
   title: '',
@@ -162,6 +169,23 @@ const ArticleSubmissionForm = () => {
     });
   };
   
+  // Function to show alerts
+  const showAlert = (message, severity = 'success') => {
+    setAlert({
+      open: true,
+      message,
+      severity
+    });
+  };
+
+  // Function to close alert
+  const handleCloseAlert = () => {
+    setAlert({
+      ...alert,
+      open: false
+    });
+  };
+  
  const validateForm = () => {
   const newErrors = {};
   
@@ -235,7 +259,7 @@ const handleSubmit = async (e, submitType) => {
       const response = await newsService.uploadNews(formDataToSend);
 
       if (response.success) {
-        toast.success(
+        showAlert(
           submitType === 'draft' 
             ? "Draft saved successfully" 
             : "Article submitted for review"
@@ -262,7 +286,7 @@ const handleSubmit = async (e, submitType) => {
       }
     } catch (error) {
       console.error('Error submitting article:', error);
-      toast.error(error.message || 'Failed to submit article. Please try again.');
+      showAlert(error.message || 'Failed to submit article. Please try again.', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -606,6 +630,22 @@ useEffect(() => {
           </Stack>
         </Grid>
       </Grid>
+      
+      {/* Success/Error Alert */}
+      <Snackbar
+        open={alert.open}
+        autoHideDuration={6000}
+        onClose={handleCloseAlert}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleCloseAlert} 
+          severity={alert.severity} 
+          sx={{ width: '100%' }}
+        >
+          {alert.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
