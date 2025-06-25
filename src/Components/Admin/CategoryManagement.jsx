@@ -51,9 +51,9 @@ const CategoryManagement = () => {
       console.log("Fetched Categories : ", response);
       
       if (response.success) {
-        // Only get parent categories (categories without a parent)
-        const parentCategories = response.data.filter(category => !category.parent);
-        setCategories(parentCategories);
+        // Only get categories with children
+        const categoriesWithChildren = response.data.filter(category => Array.isArray(category.children) && category.children.length > 0);
+        setCategories(categoriesWithChildren);
       } else {
         toast.error('Failed to fetch categories');
       }
@@ -106,9 +106,13 @@ const CategoryManagement = () => {
 
   const handleSubmit = async () => {
     try {
+      if (!formData.name) {
+        toast.error('Category name is required');
+        return;
+      }
       const categoryData = {
         name: formData.name,
-        ...(formData.parent && { parent: formData.parent })
+        ...(formData.parent ? { parent: formData.parent } : {})
       };
 
       if (editMode) {
@@ -150,9 +154,21 @@ const CategoryManagement = () => {
     }
   };
 
-  const renderCategoryRow = (category, level = 0) => {
+  const renderCategoryRow = (category, level = 0, parentName = null) => {
     const hasChildren = category.children && category.children.length > 0;
     const isExpanded = expandedCategories.has(category._id);
+
+    // For parent categories (level 0), use oldest child date if no createdAt
+    let displayDate = category.createdAt;
+    if (level === 0 && !category.createdAt && hasChildren) {
+      const childDates = category.children
+        .map(child => child.createdAt)
+        .filter(date => !!date)
+        .map(date => new Date(date));
+      if (childDates.length > 0) {
+        displayDate = new Date(Math.min(...childDates.map(date => date.getTime())));
+      }
+    }
 
     return (
       <React.Fragment key={category._id}>
@@ -177,21 +193,18 @@ const CategoryManagement = () => {
               {category.name}
             </Box>
           </TableCell>
-          <TableCell>
-            {category.parent ? (
+          {/* Only show parent info for children (level > 0) */}
+          {level > 0 && (
+            <TableCell>
               <Chip 
-                label={categories.find(c => c._id === category.parent)?.name || 'Unknown'} 
+                label={parentName || 'Unknown'} 
                 size="small" 
                 variant="outlined"
               />
-            ) : (
-              <Typography variant="body2" color="text.secondary">
-                None
-              </Typography>
-            )}
-          </TableCell>
+            </TableCell>
+          )}
           <TableCell>
-            {new Date(category.createdAt).toLocaleDateString()}
+            {displayDate ? new Date(displayDate).toLocaleDateString() : 'N/A'}
           </TableCell>
           <TableCell align="right">
             <IconButton 
@@ -212,14 +225,14 @@ const CategoryManagement = () => {
         </TableRow>
         {hasChildren && isExpanded && (
           <TableRow>
-            <TableCell colSpan={4} sx={{ p: 0 }}>
+            <TableCell colSpan={level === 0 ? 3 : 4} sx={{ p: 0 }}>
               <Collapse in={isExpanded}>
                 <Box sx={{ pl: 4 }}>
                   <TableContainer component={Paper} elevation={0}>
                     <Table size="small">
                       <TableBody>
                         {category.children.map(child => 
-                          renderCategoryRow(child, level + 1)
+                          renderCategoryRow(child, level + 1, category.name)
                         )}
                       </TableBody>
                     </Table>
@@ -264,7 +277,6 @@ const CategoryManagement = () => {
           <TableHead>
             <TableRow>
               <TableCell>Name</TableCell>
-              <TableCell>Parent Category</TableCell>
               <TableCell>Created At</TableCell>
               <TableCell align="right">Actions</TableCell>
             </TableRow>
