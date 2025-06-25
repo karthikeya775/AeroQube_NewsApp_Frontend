@@ -54,7 +54,7 @@ export interface ICategory {
 }
 
 class NewsService {
-  private baseUrl = `http://13.200.122.192:5000/news-service/api/v0/news`;
+  private baseUrl = `https://api.currentnews.co.in/news-service/api/v0/news`;
 private maxRetries = 3;
 private retryDelay = 2000; // 2 seconds
 

@@ -33,7 +33,7 @@ export interface INews {
 }
 
 class ViewService {
-  private baseUrl = `http://13.200.122.192:5000/news-service/api/v0/view`;
+  private baseUrl = `https://api.currentnews.co.in/news-service/api/v0/view`;
 
   // Get all news with language support
   async getAllNews(limit = 10, offset = 1) {

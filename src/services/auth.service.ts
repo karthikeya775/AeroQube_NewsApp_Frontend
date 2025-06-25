@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL:  'http://13.200.122.192:5000/user-service/api/v0/user',
+  baseURL:  'https://api.currentnews.co.in/user-service/api/v0/user',
   headers: {
     'Content-Type': 'application/json'
   }

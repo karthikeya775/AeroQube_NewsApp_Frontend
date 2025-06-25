@@ -22,7 +22,7 @@ import ReporterDashboard from '../../Components/Reporter/ReporterDashboard';
 import MySubmissions from '../../Components/Reporter/MySubmissions';
 import ArticleSubmissionForm from '../../Components/Reporter/ArticleSubmissionForm';
 import { toast } from "sonner";
-import { useNavigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { authService } from '../../services/auth.service';
 
 const drawerWidth = 240;
@@ -32,7 +32,6 @@ const ReporterPanel = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
-  const [currentSection, setCurrentSection] = useState('dashboard');
   const [userData, setUserData] = useState({
     name: '',
     email: '',
@@ -75,8 +74,8 @@ const ReporterPanel = () => {
     loadUserData();
   }, [navigate]);
 
-  const handleNavigation = (section) => {
-    setCurrentSection(section);
+  const handleNavigation = (path) => {
+    navigate(path);
     if (isMobile) {
       setMobileOpen(false);
     }
@@ -172,7 +171,7 @@ const ReporterPanel = () => {
               variant="h6" 
               noWrap 
               component="div" 
-              onClick={() => handleNavigation('dashboard')}
+              onClick={() => handleNavigation('/reporter/dashboard')}
               sx={{ 
                 fontWeight: 700,
                 letterSpacing: '0.5px',
@@ -194,7 +193,7 @@ const ReporterPanel = () => {
             {!isMobile && (
               <Button
                 variant="contained"
-                onClick={() => handleNavigation('submit-article')}
+                onClick={() => handleNavigation('/reporter/submit')}
                 sx={{
                   mr: 2,
                   backgroundColor: '#FFFFFF',
@@ -326,7 +325,6 @@ const ReporterPanel = () => {
           }}
         >
           <ReporterSideBar
-            currentSection={currentSection}
             onNavigate={handleNavigation}
             closeMobileDrawer={() => setMobileOpen(false)}
           />
@@ -349,7 +347,6 @@ const ReporterPanel = () => {
         >
           <Toolbar />
           <ReporterSideBar
-            currentSection={currentSection}
             onNavigate={handleNavigation}
             closeMobileDrawer={() => {}}
           />
@@ -404,7 +401,12 @@ const ReporterPanel = () => {
                   minWidth: { xs: '100%', sm: 900 }
                 }}
               >
-                {renderCurrentSection()}
+                <Routes>
+                  <Route path="/" element={<Navigate to="/reporter/dashboard" replace />} />
+                  <Route path="/dashboard" element={<ReporterDashboard />} />
+                  <Route path="/submissions" element={<MySubmissions />} />
+                  <Route path="/submit" element={<ArticleSubmissionForm />} />
+                </Routes>
               </Box>
             </Box>
           </Container>

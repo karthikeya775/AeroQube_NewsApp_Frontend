@@ -14,7 +14,7 @@ import { LayoutDashboard, FileText, Send } from 'lucide-react';
 import { authService } from '../../services/auth.service';
 import { toast } from 'sonner';
 
-const ReporterSideBar = ({ currentSection, onNavigate, closeMobileDrawer }) => {
+const ReporterSideBar = ({ onNavigate, closeMobileDrawer }) => {
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -37,9 +37,9 @@ const ReporterSideBar = ({ currentSection, onNavigate, closeMobileDrawer }) => {
   }, []);
 
   const menuItems = [
-    { text: 'Dashboard', icon: <LayoutDashboard size={20} />, section: 'dashboard' },
-    { text: 'My Submissions', icon: <FileText size={20} />, section: 'submissions' },
-    { text: 'Submit Article', icon: <Send size={20} />, section: 'submit-article' }
+    { text: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/reporter/dashboard' },
+    { text: 'My Submissions', icon: <FileText size={20} />, path: '/reporter/submissions' },
+    { text: 'Submit Article', icon: <Send size={20} />, path: '/reporter/submit' }
   ];
 
   return (
@@ -87,31 +87,24 @@ const ReporterSideBar = ({ currentSection, onNavigate, closeMobileDrawer }) => {
             button
             key={item.text}
             onClick={() => {
-              onNavigate(item.section);
+              onNavigate(item.path);
               closeMobileDrawer?.();
             }}
             sx={{
               borderRadius: 1,
               mb: 1,
-              backgroundColor: currentSection === item.section ? 'rgba(59, 130, 246, 0.12)' : 'transparent',
               '&:hover': {
-                backgroundColor: currentSection === item.section 
-                  ? 'rgba(59, 130, 246, 0.16)' 
-                  : 'rgba(59, 130, 246, 0.08)'
+                backgroundColor: 'rgba(59, 130, 246, 0.08)'
               }
             }}
           >
-            <ListItemIcon sx={{ 
-              minWidth: 40, 
-              color: currentSection === item.section ? 'primary.main' : 'text.secondary'
-            }}>
+            <ListItemIcon sx={{ minWidth: 40, color: 'primary.main' }}>
               {item.icon}
             </ListItemIcon>
             <ListItemText 
               primary={item.text}
               primaryTypographyProps={{
-                fontWeight: currentSection === item.section ? 600 : 500,
-                color: currentSection === item.section ? 'primary.main' : 'text.primary'
+                fontWeight: 500
               }}
             />
           </ListItem>
